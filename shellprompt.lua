@@ -152,23 +152,27 @@ function consumer(ary)
   end
 end
 
-local nextarg = consumer(arg)
-for a in nextarg do
-  if a == "text" then
-    local v = nextarg()
-    if not v then
-      die2("text", "command requies an argument")
-      exit()
+function main()
+  local nextarg = consumer(arg)
+  for a in nextarg do
+    if a == "text" then
+      local v = nextarg()
+      if not v then
+        die2("text", "command requies an argument")
+        exit()
+      end
+      put(v)
+    else
+      local v = commands[a]
+      if not v then
+        print("no such command: "..a)
+        os.exit(1)
+      end
+      v()
     end
-    put(v)
-  else
-    local v = commands[a]
-    if not v then
-      print("no such command: "..a)
-      os.exit(1)
-    end
-    v()
   end
+  commands["reset"]()
+  io.write(buffer, "\n")
 end
-commands["reset"]()
-io.write(buffer, "\n")
+
+main()
