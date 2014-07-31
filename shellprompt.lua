@@ -1,25 +1,39 @@
 -- http://www.understudy.net/custom.html
 
-
 local last_ansi = nil
 local is_bash = false
 local is_csh  = false
 local is_zsh  = false
 local buffer  = ""
 
+-- Utilities
+
+function consumer(ary)
+  local i = 1
+  return function()
+    local val = nil
+    if i <= #ary then
+      val = ary[i]
+      i = i + 1
+    end
+    return val
+  end
+end
 
 function isblank(s)
   return s == nil or s == ''
 end
 
-function put(s)
-  if isblank(s) then return end
-  buffer = buffer..s
-end
-
 function rfind(s, ch)
   local i = s:reverse():find(ch, 1, true)
   if not i then return nil else return #s - i + 1 end
+end
+
+-- Buffer
+
+function put(s)
+  if isblank(s) then return end
+  buffer = buffer..s
 end
 
 function putsuffix(ch, whole)
@@ -33,6 +47,7 @@ function putsuffix(ch, whole)
   put(whole:sub(suffix, #whole))
 end
 
+-- Command implementations
 
 function put_ansi(ansi)
   return function()
@@ -53,7 +68,6 @@ function put_ansi(ansi)
     end
   end
 end
-
 
 function put_dir()
   if is_zsh then
@@ -78,7 +92,6 @@ function put_user()
   put(shellprompt_os.get_username())
 end
 
-
 function put_sign()
   if shellprompt_os.is_superuser() then
     put("#")
@@ -97,7 +110,6 @@ function put_nl()
   put("\n")
 end
 
-
 function put_virtualenv()
   putsuffix("/", os.getenv("VIRTUAL_ENV"))
 end
@@ -110,6 +122,7 @@ function put_hgbranch()
   put(shellprompt_os.get_output("hg", "branch"))
 end
 
+-- Command table
 
 local commands = {
 
@@ -139,18 +152,7 @@ local commands = {
 
 }
 
-
-function consumer(ary)
-  local i = 1
-  return function()
-    local val = nil
-    if i <= #ary then
-      val = ary[i]
-      i = i + 1
-    end
-    return val
-  end
-end
+-- Main
 
 function main()
   local nextarg = consumer(arg)
