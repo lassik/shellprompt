@@ -70,14 +70,7 @@ function put_ansi(ansi)
 end
 
 function put_dir()
-  if is_zsh then
-    put('%~')
-  elseif is_bash then -- or is_ksh
-    put('\w')
-  else
-    put(shellprompt_os.get_cur_directory())
-    -- TODO
-  end
+  put(shellprompt_os.get_cur_directory())
 end
 
 function put_host()
