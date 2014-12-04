@@ -1,5 +1,5 @@
 -- Public domain
-local varname, binfilename = unpack(arg)
+local binfilename, varname = unpack(arg)
 local bytes = assert(io.open(binfilename, "rb")):read("*a")
 io.write("static char ",varname,"[] = \"")
 for i = 1,#bytes do
