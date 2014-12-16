@@ -173,9 +173,9 @@ function put_ansi(ansi)
       put(ansi)
       put("m%}")
     elseif is_bash then
-      put("\\\\[\\\\e[")
+      put("\\[\\e[")
       put(ansi)
-      put("m\\\\]")
+      put("m\\]")
     else
       put(string.char(0x1b).."[")
       put(ansi)
