@@ -1,6 +1,6 @@
 local PROGNAME  = "shellprompt"
 local last_ansi = nil
-local is_bash = false
+local is_bash = true  -- TODO
 local is_csh  = false
 local is_zsh  = false
 local buffer  = ""
@@ -232,7 +232,7 @@ end
 
 -- Command table
 
-local commands = {
+local dictionary = {
 
   reset      = put_ansi("0"),
 
@@ -260,6 +260,15 @@ local commands = {
 
 }
 
+function eval_forth_word(word, worditer)
+  -- io.stderr:write(string.format("Evaluating %q\n", word))
+  local definition = dictionary[word]
+  if not definition then
+    die("undefined word: "..word)
+  end
+  definition(worditer)
+end
+
 -- Actions
 
 function set_action(nextarg)
@@ -269,10 +278,13 @@ end
 function encode_action(nextarg)
   local which_shell = nextarg()
   local program = load_program()
-  local tokeniter = consumer(program)
-  for token in tokeniter do
-    print(string.format("%q", token))
+  local worditer = consumer(program)
+  eval_forth_word("reset")
+  for word in worditer do
+    eval_forth_word(word, worditer)
   end
+  eval_forth_word("reset")
+  io.write(buffer, "\n")
 end
 
 local actions = {
