@@ -29,6 +29,7 @@ extern int main(int argc, char **argv)
     addfunc("get_username", shellprompt_os_get_username);
     addfunc("get_full_hostname", shellprompt_os_get_full_hostname);
     addfunc("get_cur_directory", shellprompt_os_get_cur_directory);
+    addfunc("ensure_dir_exists", shellprompt_os_ensure_dir_exists);
     addfunc("get_output", shellprompt_os_get_output);
     lua_setglobal(L, "shellprompt_os");
 

@@ -1,11 +1,15 @@
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
 
+#include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <lua.h>
@@ -57,6 +61,27 @@ extern int shellprompt_os_get_cur_directory(lua_State *L)
         lua_pushstring(L, "");
     }
     return 1;
+}
+
+extern int shellprompt_os_ensure_dir_exists(lua_State *L)
+{
+    char *ptr;
+    char *path;
+
+    ptr = path = strdup(luaL_checkstring(L, 1));
+    while (*ptr == '/') {
+        ptr++;
+    }
+    do {
+        ptr = strchr(ptr, '/');
+        if (ptr) *ptr = 0;
+        if ((mkdir(path, 0700) == -1) && (errno != EEXIST)) {
+            return luaL_error(L, "mkdir %s: %s", path, strerror(errno));
+        }
+        if (ptr) *ptr++ = '/';
+    } while (ptr);
+    free(path);
+    return 0;
 }
 
 extern int shellprompt_os_get_output(lua_State *L)
