@@ -1,5 +1,3 @@
--- http://www.understudy.net/custom.html
-
 local last_ansi = nil
 local is_bash = false
 local is_csh  = false
