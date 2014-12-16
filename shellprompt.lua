@@ -65,6 +65,16 @@ function get_program_dirname_for_writing()
   return home
 end
 
+function open_program_for_reading()
+  for _, confdir in ipairs(get_xdg_config_homes()) do
+    local filename = confdir.."prompt"
+    local stream = io.open(filename, "r")
+    if stream ~= nil then
+      return stream, filename
+    end
+  end
+  return nil, nil
+end
 function save_program(argiter, filename)
   local stream = assert(io.open(filename, "w"))
   local written = false
@@ -79,6 +89,59 @@ function save_program(argiter, filename)
   end
   if written then stream:write("\n") end
   stream:close()
+end
+
+function load_program_from_string(s)
+  local args, i, j, k
+  i = 1
+  args = {}
+  while true do
+    j, k = string.find(s, "%s+", i)
+    if i == j and k then
+      i = k + 1
+    end
+    if i > string.len(s) then break end
+    local arg = ""
+    if string.find(s, '"', i) == i then
+      -- Double-quoted arg, backslash escapes allowed
+      i = i + 1
+      while not (string.find(s, '"', i) == i) do
+        j, k = string.find(s, "[^\\%\"]+", i)
+        if i == j and k then
+          arg = arg..string.sub(s, j, k)
+          i = k + 1
+        end
+        j, k = string.find(s, "\\[\\%\"]", i)
+        if i == j and k then
+          arg = arg..string.sub(s, k, k)
+          i = k + 1
+        end
+        if i > string.len(s) then
+          die("Missing closing quote")
+        end
+      end
+      i = i + 1
+    else
+      -- Bare arg without quoting, backslash escapes not allowed
+      j, k = string.find(s, "[^\\%\"%s]+", i)
+      if i == j and k then
+        arg = string.sub(s, j, k)
+        i = k + 1
+      end
+    end
+    table.insert(args, arg)
+  end
+  return args
+end
+
+function load_program()
+  local contents = ""
+  local stream = open_program_for_reading()
+  if stream then
+    contents = stream:read("*a")
+    stream:close()
+  end
+  return load_program_from_string(contents)
 end
 
 -- Buffer
@@ -203,7 +266,17 @@ function set_action(nextarg)
   save_program(nextarg, get_program_dirname_for_writing().."prompt")
 end
 
+function encode_action(nextarg)
+  local which_shell = nextarg()
+  local program = load_program()
+  local tokeniter = consumer(program)
+  for token in tokeniter do
+    print(string.format("%q", token))
+  end
+end
+
 local actions = {
+  encode = encode_action,
   set = set_action,
 }
 
