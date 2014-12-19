@@ -224,6 +224,11 @@ function put_nl()
   put("\n")
 end
 
+function put_battery()
+  local info = shellprompt_os_getpowerinfo()
+  put(info.percent.."%")
+end
+
 function put_virtualenv()
   putsuffix("/", os.getenv("VIRTUAL_ENV"))
 end
@@ -261,6 +266,8 @@ local dictionary = {
   host       = put_host,
   time24     = put_time24,
   user       = put_user,
+
+  battery    = put_battery,
 
   gitbranch  = put_gitbranch,
   hgbranch   = put_hgbranch,
