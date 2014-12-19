@@ -164,6 +164,12 @@ end
 
 -- Command implementations
 
+function put_text(readarg)
+  local text = readarg()
+  assert(text)
+  put(text)
+end
+
 function put_ansi(ansi)
   return function()
     if last_ansi == ansi then return end
@@ -233,6 +239,8 @@ end
 -- Command table
 
 local dictionary = {
+
+  text       = put_text,
 
   reset      = put_ansi("0"),
 
