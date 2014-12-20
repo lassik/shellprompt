@@ -184,6 +184,7 @@ end
 -- Forth
 
 local dictionary = {}
+local stack = {}
 
 function eval_forth_word(word, worditer)
   -- io.stderr:write(string.format("Evaluating %q\n", word))
