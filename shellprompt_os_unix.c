@@ -133,3 +133,16 @@ cleanup:
     luaL_pushresult(&ans);
     return 1;
 }
+
+extern int shellprompt_os_unamesys(lua_State *L)
+{
+    static struct utsname names;
+    const char *sysname;
+
+    sysname = "";
+    if ((uname(&names) != -1) && names.sysname) {
+        sysname = names.sysname;
+    }
+    lua_pushstring(L, sysname);
+    return 1;
+}
