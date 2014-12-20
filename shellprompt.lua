@@ -27,6 +27,12 @@ function isblank(s)
   return s == nil or s == ''
 end
 
+function string_rtrim(s)
+  local i, n = s:reverse():find("%s*")
+  if i == 1 then return s:sub(1, s:len()-n) end
+  return s
+end
+
 function rfind(s, ch)
   local i = s:reverse():find(ch, 1, true)
   if not i then return nil else return #s - i + 1 end
@@ -133,14 +139,18 @@ function load_program_from_string(s)
   return args
 end
 
-function load_program()
+function load_program_text()
   local contents = ""
   local stream = open_program_for_reading()
   if stream then
     contents = stream:read("*a")
     stream:close()
   end
-  return load_program_from_string(contents)
+  return contents
+end
+
+function load_program()
+  return load_program_from_string(load_program_text())
 end
 
 -- Buffer
@@ -282,6 +292,14 @@ end
 -- Actions
 
 local actions = {}
+
+function actions.get(nextarg)
+  assert(not nextarg())
+  local text = string_rtrim(load_program_text())
+  if text:len() > 0 then
+    print(text)
+  end
+end
 
 function actions.set(nextarg)
   save_program(nextarg, get_program_dirname_for_writing().."prompt")
