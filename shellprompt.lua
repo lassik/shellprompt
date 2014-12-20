@@ -219,6 +219,15 @@ function dictionary.termcols()
   table.insert(stack, cols or 0)  -- TODO: Is zero really a good fallback?
 end
 
+function dictionary.reptext(readarg)
+  local text = readarg()
+  assert(text)
+  local count = table.remove(stack)
+  assert(type(count) == "number",
+         "reptext need to pop a numerical count from the stack")
+  put(string.rep(text, count))
+end
+
 function dictionary.dir()
   put(shellprompt_os_get_cur_directory())
 end
