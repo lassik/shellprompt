@@ -11,12 +11,6 @@
 
 static lua_State *L;
 
-static void addfunc(const char *name, int (*func)(lua_State *))
-{
-    lua_pushcfunction(L, func);
-    lua_setfield(L, -2, name);
-}
-
 extern int main(int argc, char **argv)
 {
     int i;
@@ -24,14 +18,12 @@ extern int main(int argc, char **argv)
     L = luaL_newstate();
     luaL_openlibs(L);
 
-    lua_newtable(L);
-    addfunc("is_superuser", shellprompt_os_is_superuser);
-    addfunc("get_username", shellprompt_os_get_username);
-    addfunc("get_full_hostname", shellprompt_os_get_full_hostname);
-    addfunc("get_cur_directory", shellprompt_os_get_cur_directory);
-    addfunc("ensure_dir_exists", shellprompt_os_ensure_dir_exists);
-    addfunc("get_output", shellprompt_os_get_output);
-    lua_setglobal(L, "shellprompt_os");
+    lua_register(L, "shellprompt_os_is_superuser", shellprompt_os_is_superuser);
+    lua_register(L, "shellprompt_os_get_username", shellprompt_os_get_username);
+    lua_register(L, "shellprompt_os_get_full_hostname", shellprompt_os_get_full_hostname);
+    lua_register(L, "shellprompt_os_get_cur_directory", shellprompt_os_get_cur_directory);
+    lua_register(L, "shellprompt_os_ensure_dir_exists", shellprompt_os_ensure_dir_exists);
+    lua_register(L, "shellprompt_os_get_output", shellprompt_os_get_output);
 
     lua_createtable(L, argc-1, 0);
     for (i = 1; i < argc; i++) {

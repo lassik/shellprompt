@@ -61,7 +61,7 @@ function get_program_dirname_for_writing()
   -- for i, home in ipairs(homes) do print(i, home) end
   if #homes == 0 then die("Home directory not found") end
   local home = homes[1]
-  shellprompt_os.ensure_dir_exists(home)
+  shellprompt_os_ensure_dir_exists(home)
   return home
 end
 
@@ -191,11 +191,11 @@ function put_ansi(ansi)
 end
 
 function put_dir()
-  put(shellprompt_os.get_cur_directory())
+  put(shellprompt_os_get_cur_directory())
 end
 
 function put_host()
-  putsuffix('.', shellprompt_os.get_full_hostname())
+  putsuffix('.', shellprompt_os_get_full_hostname())
 end
 
 function put_time24()
@@ -203,11 +203,11 @@ function put_time24()
 end
 
 function put_user()
-  put(shellprompt_os.get_username())
+  put(shellprompt_os_get_username())
 end
 
 function put_sign()
-  if shellprompt_os.is_superuser() then
+  if shellprompt_os_is_superuser() then
     put("#")
   elseif is_csh then
     put("%")
@@ -234,11 +234,11 @@ function put_virtualenv()
 end
 
 function put_gitbranch()
-  putsuffix("/", shellprompt_os.get_output("git", "symbolic-ref", "HEAD"))
+  putsuffix("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
 end
 
 function put_hgbranch()
-  put(shellprompt_os.get_output("hg", "branch"))
+  put(shellprompt_os_get_output("hg", "branch"))
 end
 
 -- Command table
