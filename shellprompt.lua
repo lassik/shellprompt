@@ -161,14 +161,6 @@ function putsuffix(ch, whole)
   put(whole:sub(suffix, #whole))
 end
 
--- Command implementations
-
-function put_text(readarg)
-  local text = readarg()
-  assert(text)
-  put(text)
-end
-
 function put_ansi(ansi)
   return function()
     if last_ansi == ansi then return end
@@ -189,90 +181,9 @@ function put_ansi(ansi)
   end
 end
 
-function put_dir()
-  put(shellprompt_os_get_cur_directory())
-end
+-- Forth
 
-function put_host()
-  putsuffix('.', shellprompt_os_get_full_hostname())
-end
-
-function put_time24()
-  put(os.date("%H:%M"))
-end
-
-function put_user()
-  put(shellprompt_os_get_username())
-end
-
-function put_sign()
-  if shellprompt_os_is_superuser() then
-    put("#")
-  elseif is_csh then
-    put("%")
-  else
-    put("$")
-  end
-end
-
-function put_sp()
-  put(" ")
-end
-
-function put_nl()
-  put("\n")
-end
-
-function put_battery()
-  local info = shellprompt_os_getpowerinfo()
-  put(info.percent.."%")
-end
-
-function put_virtualenv()
-  putsuffix("/", os.getenv("VIRTUAL_ENV"))
-end
-
-function put_gitbranch()
-  putsuffix("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
-end
-
-function put_hgbranch()
-  put(shellprompt_os_get_output("hg", "branch"))
-end
-
--- Command table
-
-local dictionary = {
-
-  text       = put_text,
-
-  reset      = put_ansi("0"),
-
-  black      = put_ansi("30"),
-  blue       = put_ansi("34"),
-  cyan       = put_ansi("36"),
-  green      = put_ansi("32"),
-  magenta    = put_ansi("35"),
-  red        = put_ansi("31"),
-  white      = put_ansi("37"),
-  yellow     = put_ansi("33"),
-
-  sign       = put_sign,
-  sp         = put_sp,
-  nl         = put_nl,
-
-  dir        = put_dir,
-  host       = put_host,
-  time24     = put_time24,
-  user       = put_user,
-
-  battery    = put_battery,
-
-  gitbranch  = put_gitbranch,
-  hgbranch   = put_hgbranch,
-  virtualenv = put_virtualenv,
-
-}
+local dictionary = {}
 
 function eval_forth_word(word, worditer)
   -- io.stderr:write(string.format("Evaluating %q\n", word))
@@ -283,13 +194,84 @@ function eval_forth_word(word, worditer)
   definition(worditer)
 end
 
+-- Forth words
+
+dictionary.reset   = put_ansi("0")
+dictionary.black   = put_ansi("30")
+dictionary.blue    = put_ansi("34")
+dictionary.cyan    = put_ansi("36")
+dictionary.green   = put_ansi("32")
+dictionary.magenta = put_ansi("35")
+dictionary.red     = put_ansi("31")
+dictionary.white   = put_ansi("37")
+dictionary.yellow  = put_ansi("33")
+
+function dictionary.text(readarg)
+  local text = readarg()
+  assert(text)
+  put(text)
+end
+
+function dictionary.dir()
+  put(shellprompt_os_get_cur_directory())
+end
+
+function dictionary.host()
+  putsuffix('.', shellprompt_os_get_full_hostname())
+end
+
+function dictionary.time24()
+  put(os.date("%H:%M"))
+end
+
+function dictionary.user()
+  put(shellprompt_os_get_username())
+end
+
+function dictionary.sign()
+  if shellprompt_os_is_superuser() then
+    put("#")
+  elseif is_csh then
+    put("%")
+  else
+    put("$")
+  end
+end
+
+function dictionary.sp()
+  put(" ")
+end
+
+function dictionary.nl()
+  put("\n")
+end
+
+function dictionary.battery()
+  local info = shellprompt_os_getpowerinfo()
+  put(info.percent.."%")
+end
+
+function dictionary.virtualenv()
+  putsuffix("/", os.getenv("VIRTUAL_ENV"))
+end
+
+function dictionary.gitbranch()
+  putsuffix("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
+end
+
+function dictionary.hgbranch()
+  put(shellprompt_os_get_output("hg", "branch"))
+end
+
 -- Actions
 
-function set_action(nextarg)
+local actions = {}
+
+function actions.set(nextarg)
   save_program(nextarg, get_program_dirname_for_writing().."prompt")
 end
 
-function encode_action(nextarg)
+function actions.encode(nextarg)
   local which_shell = nextarg()
   local program = load_program()
   local worditer = consumer(program)
@@ -301,7 +283,7 @@ function encode_action(nextarg)
   io.write(buffer, "\n")
 end
 
-function version_action()
+function actions.version()
   local os_version = shellprompt_os_unamesys()
   local lua_version = _VERSION
   print(string.format("%s %s (%s, %s)",
@@ -309,12 +291,7 @@ function version_action()
                       os_version, lua_version))
 end
 
-local actions = {
-  encode = encode_action,
-  set = set_action,
-  version = version_action,
-  ["--version"] = version_action,
-}
+actions["--version"] = actions.version
 
 -- Main
 
