@@ -225,7 +225,6 @@ end
 
 function dictionary.termcols()
   cols, rows = shellprompt_os_termcolsrows()
-  io.stderr:write(string.format("Got cols=%s rows=%s\n", tostring(cols), tostring(rows)))
   table.insert(stack, cols or 0)  -- TODO: Is zero really a good fallback?
 end
 
