@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")"
 builddir=build-osx
-. build-helper-unix.sh
+. ./build-helper-unix.sh
 cd $builddir
 luac -o shellprompt.luac ../shellprompt.lua
 lua ../file2h.lua shellprompt.luac shellprompt_lua > shellprompt_lua.h

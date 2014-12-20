@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")"
 builddir=build-linux
-. build-helper-unix.sh
+. ./build-helper-unix.sh
 cd $builddir
 cat ../shellprompt_os_linux.lua ../shellprompt.lua > shellpromptall.lua
 luac -o shellprompt.luac shellpromptall.lua
