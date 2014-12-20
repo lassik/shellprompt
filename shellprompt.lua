@@ -1,4 +1,3 @@
-local PROGNAME  = "shellprompt"
 local last_ansi = nil
 local is_bash = true  -- TODO
 local is_csh  = false
@@ -302,9 +301,19 @@ function encode_action(nextarg)
   io.write(buffer, "\n")
 end
 
+function version_action()
+  local os_version = shellprompt_os_unamesys()
+  local lua_version = _VERSION
+  print(string.format("%s %s (%s, %s)",
+                      PROGNAME, PROGVERSION,
+                      os_version, lua_version))
+end
+
 local actions = {
   encode = encode_action,
   set = set_action,
+  version = version_action,
+  ["--version"] = version_action,
 }
 
 -- Main

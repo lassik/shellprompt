@@ -21,6 +21,10 @@ extern int main(int argc, char **argv)
     L = luaL_newstate();
     luaL_openlibs(L);
 
+    lua_pushstring(L, PROGNAME);
+    lua_setglobal(L, "PROGNAME");
+    lua_pushstring(L, PROGVERSION);
+    lua_setglobal(L, "PROGVERSION");
     LUA_REGISTER(L, shellprompt_os_is_superuser);
     LUA_REGISTER(L, shellprompt_os_get_username);
     LUA_REGISTER(L, shellprompt_os_get_full_hostname);
