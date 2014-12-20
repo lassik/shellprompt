@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/utsname.h>
@@ -145,4 +146,18 @@ extern int shellprompt_os_unamesys(lua_State *L)
     }
     lua_pushstring(L, sysname);
     return 1;
+}
+
+extern int shellprompt_os_termcolsrows(lua_State *L)
+{
+    static struct winsize w;
+
+    if (ioctl(0, TIOCGWINSZ, &w) == -1) {
+        lua_pushnil(L);
+        lua_pushnil(L);
+    } else {
+        lua_pushinteger(L, w.ws_col);
+        lua_pushinteger(L, w.ws_row);
+    }
+    return 2;
 }

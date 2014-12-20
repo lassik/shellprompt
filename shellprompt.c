@@ -32,6 +32,7 @@ extern int main(int argc, char **argv)
     LUA_REGISTER(L, shellprompt_os_ensure_dir_exists);
     LUA_REGISTER(L, shellprompt_os_get_output);
     LUA_REGISTER(L, shellprompt_os_unamesys);
+    LUA_REGISTER(L, shellprompt_os_termcolsrows);
 
     lua_createtable(L, argc-1, 0);
     for (i = 1; i < argc; i++) {
