@@ -205,11 +205,17 @@ end
 
 function eval_forth_word(word, worditer)
   -- io.stderr:write(string.format("Evaluating %q\n", word))
-  local definition = dictionary[word]
-  if not definition then
-    die("undefined word: "..word)
+  local numtext = string.match(word, "^[+-]?%d+$")
+  if numtext then
+    table.insert(stack, tonumber(numtext))
+    return
   end
-  definition(worditer)
+  local definition = dictionary[word]
+  if definition then
+    definition(worditer)
+    return
+  end
+  die("undefined word: "..word)
 end
 
 -- Forth words
