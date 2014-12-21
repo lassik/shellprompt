@@ -230,6 +230,14 @@ dictionary.red     = put_ansi("31")
 dictionary.white   = put_ansi("37")
 dictionary.yellow  = put_ansi("33")
 
+function dictionary.min()
+  table.insert(stack, math.min(pop_number(), pop_number()))
+end
+
+function dictionary.max()
+  table.insert(stack, math.max(pop_number(), pop_number()))
+end
+
 function dictionary.text(readarg)
   local text = readarg()
   assert(text)
