@@ -196,6 +196,13 @@ end
 local dictionary = {}
 local stack = {}
 
+function pop_number()
+  assert(#stack > 0, "Stack underflow")
+  local value = table.remove(stack)
+  assert(type(value) == "number", "Number expected")
+  return value
+end
+
 function eval_forth_word(word, worditer)
   -- io.stderr:write(string.format("Evaluating %q\n", word))
   local definition = dictionary[word]
