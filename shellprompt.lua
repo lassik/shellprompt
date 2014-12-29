@@ -312,6 +312,10 @@ end
 -- Actions
 
 local actions = {}
+local actionargs = {}
+local actiondocs = {}
+
+actiondocs.edit = "edit the shell prompt in your text editor of choice"
 
 function actions.edit(nextarg)
   local editor = os.getenv("EDITOR")
@@ -327,6 +331,8 @@ function actions.edit(nextarg)
   os.execute(editor.." "..filename)
 end
 
+actiondocs.get = "write out the program for the current prompt"
+
 function actions.get(nextarg)
   assert(not nextarg())
   local text = string_rtrim(load_program_text())
@@ -335,9 +341,15 @@ function actions.get(nextarg)
   end
 end
 
+actiondocs.set = "set the prompt to the given program"
+actionargs.set = "<program...>"
+
 function actions.set(nextarg)
   save_program(nextarg, get_program_dirname_for_writing().."prompt")
 end
+
+actiondocs.encode = "encode the prompt in a format understood by the shell"
+actionargs.encode = "<shell>"
 
 function actions.encode(nextarg)
   local which_shell = nextarg()
@@ -351,6 +363,8 @@ function actions.encode(nextarg)
   io.write(buffer, "\n")
 end
 
+actiondocs.version = "write out version information"
+
 function actions.version()
   local os_version = shellprompt_os_unamesys()
   local lua_version = _VERSION
@@ -360,17 +374,50 @@ function actions.version()
 end
 
 actions["--version"] = actions.version
+actiondocs["--version"] = actiondocs.version
 
 -- Main
+
+function usage(msg)
+  if msg then
+    io.stderr:write(""..msg.."\n")
+  end
+  local maxlen = 0
+  local sorted = {}
+  local items = {}
+  local docs = {}
+  for action in pairs(actions) do
+    table.insert(sorted, action)
+  end
+  table.sort(sorted)
+  for _, action in ipairs(sorted) do
+    local item = action.." "..(actionargs[action] or "")
+    maxlen = math.max(maxlen, item:len())
+    table.insert(items, item)
+    table.insert(docs, (actiondocs[action] or ""))
+  end
+  local first = true
+  for i, item in ipairs(items) do
+    local prefix = nil
+    if first then
+      prefix = "usage: "
+    else
+      prefix = "       "
+    end
+    io.stderr:write(prefix..PROGNAME.." "..item..string.rep(" ", maxlen-item:len()+2)..docs[i].."\n")
+    first = false
+  end
+  os.exit(1)
+end
 
 function main()
   local nextarg = consumer(arg)
   local actionname = nextarg()
   local action = actions[actionname]
   if not actionname then
-    die("usage")
+    usage()
   elseif not action then
-    die("unknown action: "..actionname)
+    usage("unknown action: "..actionname)
   end
   action(nextarg)
 end
