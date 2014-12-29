@@ -313,6 +313,20 @@ end
 
 local actions = {}
 
+function actions.edit(nextarg)
+  local editor = os.getenv("EDITOR")
+  if not (editor and editor:match("%w+")) then
+    editor = "vi"
+  end
+  local stream, filename = open_program_for_reading()
+  if stream then
+    stream:close()
+  else
+    filename = get_program_dirname_for_writing().."prompt"
+  end
+  os.execute(editor.." "..filename)
+end
+
 function actions.get(nextarg)
   assert(not nextarg())
   local text = string_rtrim(load_program_text())
