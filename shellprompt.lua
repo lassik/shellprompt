@@ -258,6 +258,16 @@ function dictionary.reptext(readarg)
   put(string.rep(text, count))
 end
 
+function dictionary.line()
+  local length = pop_number()
+  -- TODO: bash only
+  put("\\[")
+  put("\\e(0")
+  put(string.rep("\x71", length))
+  put("\\e(B")
+  put("\\]")
+end
+
 function dictionary.dir()
   put(shellprompt_os_get_cur_directory())
 end
