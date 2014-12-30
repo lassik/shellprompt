@@ -171,14 +171,27 @@ function putsuffix(ch, whole)
   put(whole:sub(suffix, #whole))
 end
 
-function put_terminal_escape(sequence)
+function begin_zero_length_escape(sequence)
   if is_bash then
-    put("\\[\\e"..sequence.."\\]")
+    put("\\[\\e"..sequence)
   elseif is_zsh or is_tcsh then
-    put("%{"..string.char(0x1b)..sequence.."%}")
+    put("%{"..string.char(0x1b)..sequence)
   else
     put(string.char(0x1b)..sequence)
   end
+end
+
+function end_zero_length_escape()
+  if is_bash then
+    put("\\]")
+  elseif is_zsh or is_tcsh then
+    put("%}")
+  end
+end
+
+function put_terminal_escape(sequence)
+  begin_zero_length_escape(sequence)
+  end_zero_length_escape()
 end
 
 function ansi_attribute_putter(ansi)
