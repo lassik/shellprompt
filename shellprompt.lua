@@ -1,6 +1,6 @@
 local last_ansi = nil
 local is_bash = false
-local is_csh  = false
+local is_tcsh = false
 local is_zsh  = false
 local buffer  = ""
 
@@ -172,10 +172,10 @@ function putsuffix(ch, whole)
 end
 
 function put_terminal_escape(sequence)
-  if is_zsh then
-    put("%{"..string.char(0x1b)..sequence.."%}")
-  elseif is_bash then
+  if is_bash then
     put("\\[\\e"..sequence.."\\]")
+  elseif is_zsh or is_tcsh then
+    put("%{"..string.char(0x1b)..sequence.."%}")
   else
     put(string.char(0x1b)..sequence)
   end
@@ -294,7 +294,7 @@ end
 function dictionary.sign()
   if shellprompt_os_is_superuser() then
     put("#")
-  elseif is_csh then
+  elseif is_tcsh then
     put("%")
   else
     put("$")
@@ -306,7 +306,23 @@ function dictionary.sp()
 end
 
 function dictionary.nl()
-  put("\n")
+  if is_bash or is_zsh or is_tcsh then
+    put("\\n")
+  else
+    put("\n")
+  end
+end
+
+function dictionary.shell()
+  if is_bash then
+    put("bash")
+  elseif is_zsh then
+    put("zsh")
+  elseif is_tcsh then
+    put("tcsh")
+  else
+    -- TODO
+  end
 end
 
 function dictionary.battery()
@@ -374,6 +390,8 @@ function actions.encode(nextarg)
     is_bash = true
   elseif which_shell == "zsh" then
     is_zsh = true
+  elseif which_shell == "tcsh" then
+    is_tcsh = true
   else
     die(string.format("unknown shell: %q", which_shell))
   end
@@ -384,6 +402,18 @@ function actions.encode(nextarg)
     eval_forth_word(word, worditer)
   end
   eval_forth_word("reset")
+  if is_tcsh then
+    -- TODO: This extra space at the end of the prompt is needed so
+    -- the last color from the prompt doesn't bleed over into the
+    -- user-editable command line.  The tcsh manual, section "Special
+    -- shell variables", command "prompt", says for "%{string%}":
+    -- "This cannot be the last sequence in prompt."  Using %L last
+    -- doesn't work either (it has no effect). We could try to be
+    -- smart and catch a trailing "sp" command or other whitespace and
+    -- put the ANSI reset before that, but there has to be a better
+    -- way...
+    put(" ")
+  end 
   io.write(buffer, "\n")
 end
 
