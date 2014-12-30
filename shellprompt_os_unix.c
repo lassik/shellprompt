@@ -69,7 +69,9 @@ extern int shellprompt_os_ensure_dir_exists(lua_State *L)
     char *ptr;
     char *path;
 
-    ptr = path = strdup(luaL_checkstring(L, 1));
+    if (!(ptr = path = strdup(luaL_checkstring(L, 1)))) {
+        return luaL_error(L, "ouf of memory");
+    }
     while (*ptr == '/') {
         ptr++;
     }
