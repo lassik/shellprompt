@@ -306,7 +306,7 @@ function dictionary.sp()
 end
 
 function dictionary.nl()
-  if is_bash or is_zsh or is_tcsh then
+  if is_bash or is_tcsh then
     put("\\n")
   else
     put("\n")
