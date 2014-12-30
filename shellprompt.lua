@@ -276,8 +276,20 @@ function dictionary.host()
   putsuffix('.', shellprompt_os_get_full_hostname())
 end
 
+function dictionary.time12()
+  put(os.date("%I:%M %p"))
+end
+
 function dictionary.time24()
   put(os.date("%H:%M"))
+end
+
+function dictionary.weekday()
+  put(os.date("%a"))
+end
+
+function dictionary.fullweekday()
+  put(os.date("%A"))
 end
 
 function dictionary.user()
