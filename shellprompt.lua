@@ -216,6 +216,7 @@ end
 
 function eval_forth_word(word, worditer)
   -- io.stderr:write(string.format("Evaluating %q\n", word))
+  assert(word)
   local numtext = string.match(word, "^[+-]?%d+$")
   if numtext then
     table.insert(stack, tonumber(numtext))
@@ -353,6 +354,20 @@ end
 
 function dictionary.hgbranch()
   put(shellprompt_os_get_output("hg", "branch"))
+end
+
+function dictionary.title(worditer)
+  -- TODO: This is a hack. endtitle should be a real dictionary word,
+  -- not a special-cased magic sentinel word.  It should be an error
+  -- to use ANSI colors and other formatting directives within the
+  -- title.
+  begin_zero_length_escape(']0;')
+  for word in worditer do
+    if word == 'endtitle' then break end
+    eval_forth_word(word, worditer)
+  end
+  put("\x07")
+  end_zero_length_escape()
 end
 
 -- Actions
