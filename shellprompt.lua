@@ -1,5 +1,5 @@
 local last_ansi = nil
-local is_bash = true  -- TODO
+local is_bash = false
 local is_csh  = false
 local is_zsh  = false
 local buffer  = ""
@@ -171,23 +171,21 @@ function putsuffix(ch, whole)
   put(whole:sub(suffix, #whole))
 end
 
-function put_ansi(ansi)
+function put_terminal_escape(sequence)
+  if is_zsh then
+    put("%{"..string.char(0x1b)..sequence.."%}")
+  elseif is_bash then
+    put("\\[\\e"..sequence.."\\]")
+  else
+    put(string.char(0x1b)..sequence)
+  end
+end
+
+function ansi_attribute_putter(ansi)
   return function()
     if last_ansi == ansi then return end
+    put_terminal_escape("["..ansi.."m")
     last_ansi = ansi
-    if is_zsh then
-      put("%{\\e[")
-      put(ansi)
-      put("m%}")
-    elseif is_bash then
-      put("\\[\\e[")
-      put(ansi)
-      put("m\\]")
-    else
-      put(string.char(0x1b).."[")
-      put(ansi)
-      put("m")
-    end
   end
 end
 
@@ -220,15 +218,15 @@ end
 
 -- Forth words
 
-dictionary.reset   = put_ansi("0")
-dictionary.black   = put_ansi("30")
-dictionary.blue    = put_ansi("34")
-dictionary.cyan    = put_ansi("36")
-dictionary.green   = put_ansi("32")
-dictionary.magenta = put_ansi("35")
-dictionary.red     = put_ansi("31")
-dictionary.white   = put_ansi("37")
-dictionary.yellow  = put_ansi("33")
+dictionary.reset   = ansi_attribute_putter("0")
+dictionary.black   = ansi_attribute_putter("30")
+dictionary.blue    = ansi_attribute_putter("34")
+dictionary.cyan    = ansi_attribute_putter("36")
+dictionary.green   = ansi_attribute_putter("32")
+dictionary.magenta = ansi_attribute_putter("35")
+dictionary.red     = ansi_attribute_putter("31")
+dictionary.white   = ansi_attribute_putter("37")
+dictionary.yellow  = ansi_attribute_putter("33")
 
 function dictionary.min()
   table.insert(stack, math.min(pop_number(), pop_number()))
@@ -260,12 +258,9 @@ end
 
 function dictionary.line()
   local length = pop_number()
-  -- TODO: bash only
-  put("\\[")
-  put("\\e(0")
-  put(string.rep("\x71", length))
-  put("\\e(B")
-  put("\\]")
+  put_terminal_escape("(0")
+  put(string.rep("q", length))
+  put_terminal_escape("(B")
 end
 
 function dictionary.dir()
@@ -375,6 +370,13 @@ actionargs.encode = "<shell>"
 
 function actions.encode(nextarg)
   local which_shell = nextarg()
+  if which_shell == "bash" then
+    is_bash = true
+  elseif which_shell == "zsh" then
+    is_zsh = true
+  else
+    die(string.format("unknown shell: %q", which_shell))
+  end
   local program = load_program()
   local worditer = consumer(program)
   eval_forth_word("reset")
