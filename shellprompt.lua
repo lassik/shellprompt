@@ -2,6 +2,7 @@ local last_ansi = nil
 local is_bash = false
 local is_tcsh = false
 local is_zsh  = false
+local is_dumb = false
 local buffer  = ""
 
 -- Utilities
@@ -196,7 +197,7 @@ end
 
 function ansi_attribute_putter(ansi)
   return function()
-    if last_ansi == ansi then return end
+    if is_dumb or (last_ansi == ansi) then return end
     put_terminal_escape("["..ansi.."m")
     last_ansi = ansi
   end
@@ -272,9 +273,13 @@ end
 
 function dictionary.line()
   local length = pop_number()
-  put_terminal_escape("(0")
-  put(string.rep("q", length))
-  put_terminal_escape("(B")
+  if is_dumb then
+    put(string.rep("-", length))
+  else
+    put_terminal_escape("(0")
+    put(string.rep("q", length))
+    put_terminal_escape("(B")
+  end
 end
 
 function dictionary.dir()
@@ -361,13 +366,21 @@ function dictionary.title(worditer)
   -- not a special-cased magic sentinel word.  It should be an error
   -- to use ANSI colors and other formatting directives within the
   -- title.
-  begin_zero_length_escape(']0;')
-  for word in worditer do
-    if word == 'endtitle' then break end
-    eval_forth_word(word, worditer)
+  local supported = (os.getenv("TERM") or ""):match("^xterm")
+  if supported then
+    begin_zero_length_escape(']0;')
+    for word in worditer do
+      if word == 'endtitle' then break end
+      eval_forth_word(word, worditer)
+    end
+    put("\x07")
+    end_zero_length_escape()
+  else
+    for word in worditer do
+      -- TODO: This is so lame
+      if word == 'endtitle' then break end
+    end
   end
-  put("\x07")
-  end_zero_length_escape()
 end
 
 -- Actions
@@ -423,6 +436,16 @@ function actions.encode(nextarg)
   else
     die(string.format("unknown shell: %q", which_shell))
   end
+
+  -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
+  -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
+  -- complicate things further, recent versions of GNU Emacs M-x shell
+  -- can actually read ANSI colors, but they still advertise
+  -- themselves as TERM "dumb". So I don't know how to tell the Emacs
+  -- versions that support colors from the ones that don't.
+  local term = os.getenv("TERM") or ""
+  is_dumb = ((term == "") or (term == "dumb") or (term == "emacs"))
+
   local program = load_program()
   local worditer = consumer(program)
   eval_forth_word("reset")
