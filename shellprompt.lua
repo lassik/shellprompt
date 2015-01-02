@@ -1,9 +1,12 @@
+-- Globals
+
+local buffer    = ""
 local last_ansi = nil
+local is_dumb = false
+
 local is_bash = false
 local is_tcsh = false
 local is_zsh  = false
-local is_dumb = false
-local buffer  = ""
 
 -- Utilities
 
@@ -22,14 +25,6 @@ function consumer(ary)
     end
     return val
   end
-end
-
-function map(tabl, fn)
-  ans = {}
-  for _, item in ipairs(tabl) do
-    table.insert(ans, fn(item))
-  end
-  return ans
 end
 
 function string_rtrim(s)
@@ -56,6 +51,8 @@ end
 function string_has_prefix(whole, part)
   return (string.find(whole, part, 1, true) == 1)
 end
+
+-- Program file handling
 
 function try_insert_conf_dir(tabl, envar, suffix)
   local dir = os.getenv(envar)
@@ -91,6 +88,7 @@ function open_program_for_reading()
   end
   return nil, nil
 end
+
 function save_program(argiter, filename)
   local stream = assert(io.open(filename, "w"))
   local written = false
@@ -354,7 +352,7 @@ function dictionary.text(readarg)
 end
 
 function dictionary.termcols()
-  local cols, _ = shellprompt_os_termcolsrows()
+  local cols = shellprompt_os_termcolsrows()
   table.insert(stack, (cols or 0))  -- TODO: Is zero really a good fallback?
 end
 
