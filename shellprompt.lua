@@ -24,6 +24,14 @@ function consumer(ary)
   end
 end
 
+function map(tabl, fn)
+  ans = {}
+  for _, item in ipairs(tabl) do
+    table.insert(ans, fn(item))
+  end
+  return ans
+end
+
 function string_rtrim(s)
   local i, n = s:reverse():find("%s*")
   if i == 1 then return s:sub(1, s:len()-n) end
@@ -43,14 +51,6 @@ end
 function string_suffix_or_whole(part, whole)
   local _, last = string_findlast_plain(whole, part)
   return string.sub(whole, (last or 0)+1, string.len(whole))
-end
-
-function map(tabl, fn)
-  ans = {}
-  for _, item in ipairs(tabl) do
-    table.insert(ans, fn(item))
-  end
-  return ans
 end
 
 function try_insert_conf_dir(tabl, envar, suffix)
@@ -160,7 +160,7 @@ function load_program()
   return load_program_from_string(load_program_text())
 end
 
--- Buffer
+-- Output
 
 function put(s)
   if (s == nil) or (s == "") then return end
@@ -341,8 +341,8 @@ function dictionary.text(readarg)
 end
 
 function dictionary.termcols()
-  cols, rows = shellprompt_os_termcolsrows()
-  table.insert(stack, cols or 0)  -- TODO: Is zero really a good fallback?
+  local cols, _ = shellprompt_os_termcolsrows()
+  table.insert(stack, (cols or 0))  -- TODO: Is zero really a good fallback?
 end
 
 function dictionary.reptext(readarg)
@@ -476,7 +476,7 @@ function actions.encode(nextarg)
     -- put the ANSI reset before that, but there has to be a better
     -- way...
     put(" ")
-  end 
+  end
   io.write(buffer, "\n")
 end
 
