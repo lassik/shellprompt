@@ -52,6 +52,13 @@ function string_has_prefix(whole, part)
   return (string.find(whole, part, 1, true) == 1)
 end
 
+function get_first_line_of_output(...)
+  local output = shellprompt_os_get_output(...)
+  local i = output:find("[\n\r\0]")
+  if i then return output:sub(1, i-1) end
+  return output
+end
+
 -- Program file handling
 
 function try_insert_conf_dir(tabl, envar, suffix)
@@ -280,11 +287,11 @@ end
 function queries.gitbranch()
   return string_suffix_or_whole(
     "/",
-    shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
+    get_first_line_of_output("git", "symbolic-ref", "HEAD"))
 end
 
 function queries.hgbranch()
-  return shellprompt_os_get_output("hg", "branch")
+  return get_first_line_of_output("hg", "branch")
 end
 
 -- Forth

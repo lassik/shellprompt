@@ -87,11 +87,13 @@ extern int shellprompt_os_ensure_dir_exists(lua_State *L)
     return 0;
 }
 
+/* TODO: Only reads up to LUAL_BUFFERSIZE bytes of input. */
 extern int shellprompt_os_get_output(lua_State *L)
 {
     luaL_Buffer ans;
     char *buf;
     pid_t child;
+    size_t nremain, nfill;
     ssize_t nread;
     int fds[2] = {-1, -1};
     int status;
@@ -121,13 +123,16 @@ extern int shellprompt_os_get_output(lua_State *L)
     }
     close(fds[1]);
     buf = luaL_prepbuffer(&ans);
-    if ((nread = read(fds[0], buf, LUAL_BUFFERSIZE)) == (ssize_t)-1) {
-        nread = 0;
+    nremain = LUAL_BUFFERSIZE;
+    nfill = 0;
+    while (nremain > 0) {
+        nread = read(fds[0], buf+nfill, nremain);
+        if ((nread == (ssize_t)-1) && (errno == EINTR)) continue;
+        if (nread <= 0) break;
+        nfill += nread;
+        nremain -= nread;
     }
-    while((nread > 0) && (buf[nread-1] == '\n')) {
-        nread--;
-    }
-    luaL_addsize(&ans, (size_t)nread);
+    luaL_addsize(&ans, (size_t)nfill);
     waitpid(child, &status, 0);
 cleanup:
     close(fds[0]);
