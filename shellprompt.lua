@@ -290,6 +290,13 @@ function queries.gitbranch()
     get_first_line_of_output("git", "symbolic-ref", "HEAD"))
 end
 
+function queries.gitstashcount()
+  local xs = shellprompt_os_get_output("git", "stash", "list", "--format=format:x")
+  local count = xs:gsub("%s+", ""):len()
+  if count > 0 then return count end
+  return ""
+end
+
 function queries.hgbranch()
   return get_first_line_of_output("hg", "branch")
 end
