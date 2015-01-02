@@ -198,6 +198,84 @@ function ansi_attribute_putter(ansi)
   end
 end
 
+-- Queries
+
+local queries = {}
+
+function queries.dir()
+  return shellprompt_os_get_cur_directory()
+end
+
+function queries.host()
+  return string_suffix_or_whole('.', shellprompt_os_get_full_hostname())
+end
+
+function queries.time12()
+  return os.date("%I:%M %p")
+end
+
+function queries.time24()
+  return os.date("%H:%M")
+end
+
+function queries.weekday()
+  return os.date("%a")
+end
+
+function queries.fullweekday()
+  return os.date("%A")
+end
+
+function queries.user()
+  return shellprompt_os_get_username()
+end
+
+function queries.sign()
+  if shellprompt_os_is_superuser() then
+    return "#"
+  elseif is_tcsh then
+    return "%"
+  else
+    return "$"
+  end
+end
+
+function queries.sp()
+  return " "
+end
+
+function queries.shell()
+  if is_bash then
+    return "bash"
+  elseif is_zsh then
+    return "zsh"
+  elseif is_tcsh then
+    return "tcsh"
+  else
+    -- TODO
+    return ""
+  end
+end
+
+function queries.battery()
+  local info = shellprompt_os_getpowerinfo()
+  return info.percent.."%"
+end
+
+function queries.virtualenv()
+  return string_suffix_or_whole("/", os.getenv("VIRTUAL_ENV"))
+end
+
+function queries.gitbranch()
+  return string_suffix_or_whole(
+    "/",
+    shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
+end
+
+function queries.hgbranch()
+  return shellprompt_os_get_output("hg", "branch")
+end
+
 -- Forth
 
 local dictionary = {}
@@ -227,6 +305,16 @@ function eval_forth_word(word, worditer)
 end
 
 -- Forth words
+
+for name, fn_ in pairs(queries) do
+  local fn = fn_
+  dictionary[name] = function ()
+    put((fn()) or "")
+  end
+  dictionary["?"..name] = function ()
+    table.insert(stack, (fn()))
+  end
+end
 
 dictionary.reset   = ansi_attribute_putter("0")
 dictionary.black   = ansi_attribute_putter("30")
@@ -277,83 +365,12 @@ function dictionary.line()
   end
 end
 
-function dictionary.dir()
-  put(shellprompt_os_get_cur_directory())
-end
-
-function dictionary.host()
-  put(string_suffix_or_whole('.', shellprompt_os_get_full_hostname()))
-end
-
-function dictionary.time12()
-  put(os.date("%I:%M %p"))
-end
-
-function dictionary.time24()
-  put(os.date("%H:%M"))
-end
-
-function dictionary.weekday()
-  put(os.date("%a"))
-end
-
-function dictionary.fullweekday()
-  put(os.date("%A"))
-end
-
-function dictionary.user()
-  put(shellprompt_os_get_username())
-end
-
-function dictionary.sign()
-  if shellprompt_os_is_superuser() then
-    put("#")
-  elseif is_tcsh then
-    put("%")
-  else
-    put("$")
-  end
-end
-
-function dictionary.sp()
-  put(" ")
-end
-
 function dictionary.nl()
   if is_bash or is_tcsh then
     put("\\n")
   else
     put("\n")
   end
-end
-
-function dictionary.shell()
-  if is_bash then
-    put("bash")
-  elseif is_zsh then
-    put("zsh")
-  elseif is_tcsh then
-    put("tcsh")
-  else
-    -- TODO
-  end
-end
-
-function dictionary.battery()
-  local info = shellprompt_os_getpowerinfo()
-  put(info.percent.."%")
-end
-
-function dictionary.virtualenv()
-  put(string_suffix_or_whole("/", os.getenv("VIRTUAL_ENV")))
-end
-
-function dictionary.gitbranch()
-  put(string_suffix_or_whole("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD")))
-end
-
-function dictionary.hgbranch()
-  put(shellprompt_os_get_output("hg", "branch"))
 end
 
 function dictionary.title(worditer)
