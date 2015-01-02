@@ -2,7 +2,9 @@
 
 local buffer    = ""
 local last_ansi = nil
-local is_dumb = false
+
+local has_ansi_escapes = false
+local has_vt100_graphics = false
 
 local is_bash = false
 local is_tcsh = false
@@ -57,6 +59,26 @@ function get_first_line_of_output(...)
   local i = output:find("[\n\r\0]")
   if i then return output:sub(1, i-1) end
   return output
+end
+
+-- Terminal capabilities
+
+function detect_terminal_capabilities()
+  local term = string.lower(os.getenv("TERM") or "")
+
+  -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
+  -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
+  -- complicate things further, recent versions of GNU Emacs M-x shell
+  -- can actually read ANSI colors, but they still advertise
+  -- themselves as TERM "dumb". So I don't know how to tell the Emacs
+  -- versions that support colors from the ones that don't.
+  has_ansi_escapes = ((term ~= "dumb") and (term ~= "emacs"))
+
+  -- Linux console and GNU Screen lack the VT100 graphics character
+  -- set (or at least its line-drawing subset) on UTF-8 locales.
+  has_vt100_graphics = ((term ~= "dumb") and (term ~= "emacs") and
+                          (term ~= "linux") and (term ~= "screen"))
+  
 end
 
 -- Program file handling
@@ -201,9 +223,10 @@ end
 
 function ansi_attribute_putter(ansi)
   return function()
-    if is_dumb or (last_ansi == ansi) then return end
-    put_terminal_escape("["..ansi.."m")
-    last_ansi = ansi
+    if has_ansi_escapes and (last_ansi ~= ansi) then
+      put_terminal_escape("["..ansi.."m")
+      last_ansi = ansi
+    end
   end
 end
 
@@ -381,12 +404,12 @@ end
 
 function dictionary.line()
   local length = pop_number()
-  if is_dumb then
-    put(string.rep("-", length))
-  else
+  if has_vt100_graphics then
     put_terminal_escape("(0")
     put(string.rep("q", length))
     put_terminal_escape("(B")
+  else
+    put(string.rep("-", length))
   end
 end
 
@@ -473,16 +496,7 @@ function actions.encode(nextarg)
   else
     die(string.format("unknown shell: %q", which_shell))
   end
-
-  -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
-  -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
-  -- complicate things further, recent versions of GNU Emacs M-x shell
-  -- can actually read ANSI colors, but they still advertise
-  -- themselves as TERM "dumb". So I don't know how to tell the Emacs
-  -- versions that support colors from the ones that don't.
-  local term = os.getenv("TERM") or ""
-  is_dumb = ((term == "") or (term == "dumb") or (term == "emacs"))
-
+  detect_terminal_capabilities()
   local program = load_program()
   local worditer = consumer(program)
   eval_forth_word("reset")
