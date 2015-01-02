@@ -56,7 +56,7 @@ end
 
 function get_first_line_of_output(...)
   local output = shellprompt_os_get_output(...)
-  local i = output:find("[\n\r\0]")
+  local i = output:find("[\n\r%z]")
   if i then return output:sub(1, i-1) end
   return output
 end
