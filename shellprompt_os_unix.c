@@ -19,36 +19,41 @@
 
 #include "shellprompt_os.h"
 
+static struct utsname names;
+
+static int push_string_or_blank(lua_State *L, const char *str)
+{
+    lua_pushstring(L, str ? str : "");
+    return 1;
+}
+
 extern int shellprompt_os_is_superuser(lua_State *L)
 {
-    lua_pushboolean(L, (geteuid() == 0));
+    lua_pushboolean(L, !geteuid());
     return 1;
 }
 
 extern int shellprompt_os_get_username(lua_State *L)
 {
-    const char *name;
     struct passwd *pw;
 
-    name = "";
-    if ((pw = getpwuid(getuid())) && pw->pw_name) {
-        name = pw->pw_name;
-    }
-    lua_pushstring(L, name);
-    return 1;
+    return push_string_or_blank(
+        L,
+        (pw = getpwuid(getuid())) ? pw->pw_name : 0);
 }
 
 extern int shellprompt_os_get_full_hostname(lua_State *L)
 {
-    const char *name;
-    static struct utsname names;
+    return push_string_or_blank(
+        L,
+        (uname(&names) != -1) ? names.nodename : 0);
+}
 
-    name = "";
-    if ((uname(&names) != -1) && names.nodename) {
-        name = names.nodename;
-    }
-    lua_pushstring(L, name);
-    return 1;
+extern int shellprompt_os_unamesys(lua_State *L)
+{
+    return push_string_or_blank(
+        L,
+        (uname(&names) != -1) ? names.sysname : 0);
 }
 
 extern int shellprompt_os_get_cur_directory(lua_State *L)
@@ -69,6 +74,8 @@ extern int shellprompt_os_ensure_dir_exists(lua_State *L)
     char *ptr;
     char *path;
 
+    /* It's ridiculous that I'm manipulating strings through char
+     * pointers in 2015 but I can't think of a simpler way :( */
     if (!(ptr = path = strdup(luaL_checkstring(L, 1)))) {
         return luaL_error(L, "ouf of memory");
     }
@@ -77,11 +84,17 @@ extern int shellprompt_os_ensure_dir_exists(lua_State *L)
     }
     do {
         ptr = strchr(ptr, '/');
-        if (ptr) *ptr = 0;
+        if (ptr) {
+            *ptr = 0;
+        }
         if ((mkdir(path, 0700) == -1) && (errno != EEXIST)) {
+            /* I would free(path) here but I'm not confident that
+             * free() preserves errno in all cases. Meh. */
             return luaL_error(L, "mkdir %s: %s", path, strerror(errno));
         }
-        if (ptr) *ptr++ = '/';
+        if (ptr) {
+            *ptr++ = '/';
+        }
     } while (ptr);
     free(path);
     return 0;
@@ -103,14 +116,24 @@ extern int shellprompt_os_get_output(lua_State *L)
     luaL_buffinit(L, &ans);
     argv = 0;
     argc = lua_gettop(L);
-    if (argc < 1) goto cleanup;
-    if (!(argv = calloc(argc+1, sizeof(*argv)))) goto cleanup;
-    for (i = 0; i < argc; i++) {
-        if (!(argv[i] = luaL_checkstring(L, i+1))) goto cleanup;
+    if (argc < 1) {
+        goto cleanup;
     }
-    if(pipe(fds) == -1) goto cleanup;
-    if((child = fork()) == (pid_t)-1) goto cleanup;
-    if(!child) {
+    if (!(argv = calloc(argc+1, sizeof(*argv)))) {
+        goto cleanup;
+    }
+    for (i = 0; i < argc; i++) {
+        if (!(argv[i] = luaL_checkstring(L, i+1))) {
+            goto cleanup;
+        }
+    }
+    if (pipe(fds) == -1) {
+        goto cleanup;
+    }
+    if ((child = fork()) == (pid_t)-1) {
+        goto cleanup;
+    }
+    if (!child) {
         int devnull;
 
         close(fds[0]);
@@ -127,8 +150,12 @@ extern int shellprompt_os_get_output(lua_State *L)
     nfill = 0;
     while (nremain > 0) {
         nread = read(fds[0], buf+nfill, nremain);
-        if ((nread == (ssize_t)-1) && (errno == EINTR)) continue;
-        if (nread <= 0) break;
+        if ((nread == (ssize_t)-1) && (errno == EINTR)) {
+            continue;
+        }
+        if (nread <= 0) {
+            break;
+        }
         nfill += nread;
         nremain -= nread;
     }
@@ -142,29 +169,16 @@ cleanup:
     return 1;
 }
 
-extern int shellprompt_os_unamesys(lua_State *L)
-{
-    static struct utsname names;
-    const char *sysname;
-
-    sysname = "";
-    if ((uname(&names) != -1) && names.sysname) {
-        sysname = names.sysname;
-    }
-    lua_pushstring(L, sysname);
-    return 1;
-}
-
 extern int shellprompt_os_termcolsrows(lua_State *L)
 {
-    static struct winsize w;
+    static struct winsize ws;
 
-    if (ioctl(0, TIOCGWINSZ, &w) == -1) {
+    if (ioctl(0, TIOCGWINSZ, &ws) == -1) {
         lua_pushnil(L);
         lua_pushnil(L);
     } else {
-        lua_pushinteger(L, w.ws_col);
-        lua_pushinteger(L, w.ws_row);
+        lua_pushinteger(L, ws.ws_col);
+        lua_pushinteger(L, ws.ws_row);
     }
     return 2;
 }
