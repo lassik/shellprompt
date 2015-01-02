@@ -53,6 +53,10 @@ function string_suffix_or_whole(part, whole)
   return string.sub(whole, (last or 0)+1, string.len(whole))
 end
 
+function string_has_prefix(whole, part)
+  return (string.find(whole, part, 1, true) == 1)
+end
+
 function try_insert_conf_dir(tabl, envar, suffix)
   local dir = os.getenv(envar)
   if not (dir and dir:match("^/")) then return end
@@ -202,8 +206,17 @@ end
 
 local queries = {}
 
-function queries.dir()
+function queries.absdir()
   return shellprompt_os_get_cur_directory()
+end
+
+function queries.dir()
+  local absdir = shellprompt_os_get_cur_directory()
+  local home = (os.getenv("HOME") or "")
+  if string_has_prefix(absdir, home) then
+    return "~"..string.sub(absdir, string.len(home)+1)
+  end
+  return absdir
 end
 
 function queries.host()
