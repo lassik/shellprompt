@@ -24,19 +24,25 @@ function consumer(ary)
   end
 end
 
-function isblank(s)
-  return s == nil or s == ''
-end
-
 function string_rtrim(s)
   local i, n = s:reverse():find("%s*")
   if i == 1 then return s:sub(1, s:len()-n) end
   return s
 end
 
-function rfind(s, ch)
-  local i = s:reverse():find(ch, 1, true)
-  if not i then return nil else return #s - i + 1 end
+function string_findlast_plain(s, pattern)
+  local a, b = nil, nil
+  while true do
+    local i, j = string.find(s, pattern, (b or 0)+1, true)
+    if not i then break end
+    a, b = i, j
+  end
+  return a, b
+end
+
+function string_suffix_or_whole(part, whole)
+  local _, last = string_findlast_plain(whole, part)
+  return string.sub(whole, (last or 0)+1, string.len(whole))
 end
 
 function map(tabl, fn)
@@ -157,19 +163,8 @@ end
 -- Buffer
 
 function put(s)
-  if isblank(s) then return end
+  if (s == nil) or (s == "") then return end
   buffer = buffer..s
-end
-
-function putsuffix(ch, whole)
-  if isblank(whole) then return end
-  local suffix = rfind(whole, ch)
-  if suffix then
-    suffix = suffix + 1
-  else
-    suffix = 1
-  end
-  put(whole:sub(suffix, #whole))
 end
 
 function begin_zero_length_escape(sequence)
@@ -287,7 +282,7 @@ function dictionary.dir()
 end
 
 function dictionary.host()
-  putsuffix('.', shellprompt_os_get_full_hostname())
+  put(string_suffix_or_whole('.', shellprompt_os_get_full_hostname()))
 end
 
 function dictionary.time12()
@@ -350,11 +345,11 @@ function dictionary.battery()
 end
 
 function dictionary.virtualenv()
-  putsuffix("/", os.getenv("VIRTUAL_ENV"))
+  put(string_suffix_or_whole("/", os.getenv("VIRTUAL_ENV")))
 end
 
 function dictionary.gitbranch()
-  putsuffix("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD"))
+  put(string_suffix_or_whole("/", shellprompt_os_get_output("git", "symbolic-ref", "HEAD")))
 end
 
 function dictionary.hgbranch()
