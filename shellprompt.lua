@@ -501,16 +501,15 @@ function usage(msg)
     table.insert(items, item)
     table.insert(docs, (actiondocs[action] or ""))
   end
-  local first = true
   for i, item in ipairs(items) do
     local prefix = nil
-    if first then
+    if i == 1 then
       prefix = "usage: "
     else
       prefix = "       "
     end
-    io.stderr:write(prefix..PROGNAME.." "..item..string.rep(" ", maxlen-item:len()+2)..docs[i].."\n")
-    first = false
+    io.stderr:write(prefix..PROGNAME.." "..item..
+                      string.rep(" ", maxlen-item:len()+2)..docs[i].."\n")
   end
   os.exit(1)
 end
