@@ -1,3 +1,6 @@
+/* TODO: This code has been cloned-and-hacked from a mailing list
+ * message. It needs a thorough examination and overhaul. */
+
 /*
  * http://lists.omnipotent.net/pipermail/lcdproc/2006-January/010417.html
  *
@@ -59,7 +62,13 @@
 #include <IOKit/ps/IOPowerSources.h>
 #include <IOKit/ps/IOPSKeys.h>
 
-extern int shellprompt_os_getpowerinfo(lua_State *L)
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
+#include "shellprompt_os.h"
+
+static int shellprompt_os_getpowerinfo(lua_State *L)
 {
     CFTypeRef blob;
     CFArrayRef sources;
@@ -93,7 +102,7 @@ extern int shellprompt_os_getpowerinfo(lua_State *L)
                 isbattery = 1;
                 ischarging = (CFBooleanGetValue(psValue) > 0);
             }
-            if (*battflag != LCDP_BATT_ABSENT)
+            if (1)  /* if (*battflag != LCDP_BATT_ABSENT) */
             {
                 int curCapacity, maxCapacity, curPercent;
                 curCapacity = maxCapacity = curPercent = 0;
@@ -113,13 +122,16 @@ extern int shellprompt_os_getpowerinfo(lua_State *L)
     CFRelease(blob);
     CFRelease(sources);	
     lua_createtable(L, 0, 0);
-    lua_pushboolean(L, isbattery);
-    lua_setfield(L, -2, "isbattery");
     lua_pushboolean(L, ischarging);
-    lua_setfield(L, -2, "ischarging");
-    lua_pushboolean(L, isdischarging);
-    lua_setfield(L, -2, "isdischarging");
+    lua_setfield(L, -2, "charging");
     lua_pushinteger(L, charge);
-    lua_setfield(L, -2, "charge");
+    lua_setfield(L, -2, "percent");
     return 1;
+}
+
+#define LUA_REGISTER(L, name) lua_register(L, #name, name)
+
+extern void shellprompt_os_register(lua_State *L)
+{
+    LUA_REGISTER(L, shellprompt_os_getpowerinfo);
 }

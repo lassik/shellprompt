@@ -9,13 +9,11 @@
 
 #define PROGNAME "shellprompt"
 
-#undef LUA_REGISTER
 #define LUA_REGISTER(L, name) lua_register(L, #name, name)
-
-static lua_State *L;
 
 extern int main(int argc, char **argv)
 {
+    lua_State *L;
     int i;
 
     L = luaL_newstate();
@@ -33,6 +31,7 @@ extern int main(int argc, char **argv)
     LUA_REGISTER(L, shellprompt_os_get_output);
     LUA_REGISTER(L, shellprompt_os_unamesys);
     LUA_REGISTER(L, shellprompt_os_termcolsrows);
+    shellprompt_os_register(L);
 
     lua_createtable(L, argc-1, 0);
     for (i = 1; i < argc; i++) {
