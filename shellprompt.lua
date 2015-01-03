@@ -60,9 +60,9 @@ end
 
 function get_boolean_env(envar, default)
   local s = get_lower_env(envar)
-  if (s == "on") or (s == "yes") or (s == "y") then
+  if (s == "true") or (s == "on") or (s == "yes") or (s == "y") then
     return true
-  elseif (s == "off") or (s == "no") or (s == "n") then
+  elseif (s == "false") or (s == "off") or (s == "no") or (s == "n") then
     return false
   else
     return default
