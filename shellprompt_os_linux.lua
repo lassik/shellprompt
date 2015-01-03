@@ -19,6 +19,8 @@ function shellprompt_os_getpowerinfo()
     curcharge = state:match("remaining capacity:%s*(%d+)")
     maxcharge = info:match("last full capacity:%s*(%d+)")
   end
+  curcharge = curcharge or 100
+  maxcharge = maxcharge or 100
   local percent = math.max(0, math.min(100, curcharge*100/maxcharge))
   return {charging=charging, percent=percent}
 end
