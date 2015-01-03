@@ -12,6 +12,8 @@ http://www.understudy.net/custom.html
 
 http://tldp.org/HOWTO/Xterm-Title-4.html
 
+https://en.wikipedia.org/wiki/Box-drawing_character
+
 Linux console_codes(4) manual page
 
 ## Known problems ##
