@@ -5,6 +5,7 @@ local last_ansi = nil
 
 local has_ansi_escapes = false
 local has_vt100_graphics = false
+local has_xterm_title = false
 
 local is_bash = false
 local is_tcsh = false
@@ -95,11 +96,15 @@ function detect_terminal_capabilities()
   has_vt100_graphics = ((term ~= "dumb") and (term ~= "emacs") and
                           (term ~= "linux") and (term ~= "screen"))
 
+  has_xterm_title = not not term:match("^xterm")
+
   -- Autodetection is tricky, so allow user overrides.
   has_ansi_escapes = 
     get_boolean_env("SHELLPROMPT_ANSI_ESCAPES", has_ansi_escapes)
   has_vt100_graphics =
     get_boolean_env("SHELLPROMPT_VT100_GRAPHICS", has_vt100_graphics)
+  has_xterm_title =
+    get_boolean_env("SHELLPROMPT_XTERM_TITLE", has_xterm_title)
 
 end
 
@@ -448,8 +453,7 @@ function dictionary.title(worditer)
   -- not a special-cased magic sentinel word.  It should be an error
   -- to use ANSI colors and other formatting directives within the
   -- title.
-  local supported = (os.getenv("TERM") or ""):match("^xterm")
-  if supported then
+  if has_xterm_title then
     begin_zero_length_escape(']0;')
     for word in worditer do
       if word == 'endtitle' then break end
