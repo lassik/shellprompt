@@ -54,8 +54,12 @@ function string_has_prefix(whole, part)
   return (string.find(whole, part, 1, true) == 1)
 end
 
+function get_lower_env(envar)
+  return (os.getenv(envar) or ""):gsub("^%s+", ""):gsub("%s+$", ""):lower()
+end
+
 function get_boolean_env(envar, default)
-  local s = (os.getenv(envar) or ""):gsub("%s+", ""):lower()
+  local s = get_lower_env(envar)
   if (s == "on") or (s == "yes") or (s == "y") then
     return true
   elseif (s == "off") or (s == "no") or (s == "n") then
@@ -76,7 +80,7 @@ end
 
 function detect_terminal_capabilities()
 
-  local term = (os.getenv("TERM") or ""):lower()
+  local term = get_lower_env("TERM")
 
   -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
   -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
@@ -102,8 +106,8 @@ end
 -- Program file handling
 
 function try_insert_conf_dir(tabl, envar, suffix)
-  local dir = os.getenv(envar)
-  if not (dir and dir:match("^/")) then return end
+  local dir = (os.getenv(envar) or "")
+  if not dir:match("^/") then return end
   dir = dir.."/"..(suffix or "").."/"..PROGNAME
   dir = dir:gsub("/+", "/"):gsub("/$", "").."/"
   table.insert(tabl, dir)
@@ -322,7 +326,7 @@ function queries.battery()
 end
 
 function queries.virtualenv()
-  return string_suffix_or_whole("/", os.getenv("VIRTUAL_ENV"))
+  return string_suffix_or_whole("/", (os.getenv("VIRTUAL_ENV") or ""))
 end
 
 function queries.gitbranch()
@@ -470,8 +474,8 @@ local actiondocs = {}
 actiondocs.edit = "edit the shell prompt in your text editor of choice"
 
 function actions.edit(nextarg)
-  local editor = os.getenv("EDITOR")
-  if not (editor and editor:match("%w+")) then
+  local editor = (os.getenv("EDITOR") or "")
+  if not editor:match("%w+") then
     editor = "vi"
   end
   local stream, filename = open_program_for_reading()
