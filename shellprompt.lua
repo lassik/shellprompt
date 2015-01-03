@@ -443,6 +443,11 @@ function dictionary.line()
     put_terminal_escape("(0")
     put(string.rep("q", length))
     put_terminal_escape("(B")
+  elseif get_lower_env("LC_CTYPE"):find("utf%-8")
+  or get_lower_env("LANG"):find("utf%-8") then
+    -- This is the UTF-8 encoding of the Unicode character U+2500.
+    -- It seems to work in Linux console, xterm and gnome-terminal.
+    put(string.rep("\xe2\x94\x80", length))
   else
     put(string.rep("-", length))
   end
