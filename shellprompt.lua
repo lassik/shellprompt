@@ -221,12 +221,12 @@ end
 -- Output
 
 function putraw(s)
-  s = (s or "")
+  s = tostring(s or "")
   buffer = buffer..s
 end
 
 function put(s)
-  s = (s or "")
+  s = tostring(s or "")
   if is_zsh then
     s = s:gsub("%%", "%%%%")
   end
