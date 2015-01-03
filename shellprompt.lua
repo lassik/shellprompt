@@ -220,26 +220,34 @@ end
 
 -- Output
 
-function put(s)
-  if (s == nil) or (s == "") then return end
+function putraw(s)
+  s = (s or "")
   buffer = buffer..s
+end
+
+function put(s)
+  s = (s or "")
+  if is_zsh then
+    s = s:gsub("%%", "%%%%")
+  end
+  putraw(s)
 end
 
 function begin_zero_length_escape(sequence)
   if is_bash then
-    put("\\[\\e"..sequence)
+    putraw("\\[\\e"..sequence)
   elseif is_zsh or is_tcsh then
-    put("%{"..string.char(0x1b)..sequence)
+    putraw("%{"..string.char(0x1b)..sequence)
   else
-    put(string.char(0x1b)..sequence)
+    putraw(string.char(0x1b)..sequence)
   end
 end
 
 function end_zero_length_escape()
   if is_bash then
-    put("\\]")
+    putraw("\\]")
   elseif is_zsh or is_tcsh then
-    put("%}")
+    putraw("%}")
   end
 end
 
@@ -442,9 +450,9 @@ end
 
 function dictionary.nl()
   if is_bash or is_tcsh then
-    put("\\n")
+    putraw("\\n")
   else
-    put("\n")
+    putraw("\n")
   end
 end
 
@@ -459,7 +467,7 @@ function dictionary.title(worditer)
       if word == 'endtitle' then break end
       eval_forth_word(word, worditer)
     end
-    put("\x07")
+    putraw("\x07")
     end_zero_length_escape()
   else
     for word in worditer do
