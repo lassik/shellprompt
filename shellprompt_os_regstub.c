@@ -4,4 +4,5 @@
 
 extern void shellprompt_os_register(lua_State *L)
 {
+    L=L;
 }
