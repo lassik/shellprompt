@@ -54,6 +54,17 @@ function string_has_prefix(whole, part)
   return (string.find(whole, part, 1, true) == 1)
 end
 
+function get_boolean_env(envar, default)
+  local s = (os.getenv(envar) or ""):gsub("%s+", ""):lower()
+  if (s == "on") or (s == "yes") or (s == "y") then
+    return true
+  elseif (s == "off") or (s == "no") or (s == "n") then
+    return false
+  else
+    return default
+  end
+end
+
 function get_first_line_of_output(...)
   local output = shellprompt_os_get_output(...)
   local i = output:find("[\n\r%z]")
@@ -64,7 +75,8 @@ end
 -- Terminal capabilities
 
 function detect_terminal_capabilities()
-  local term = string.lower(os.getenv("TERM") or "")
+
+  local term = (os.getenv("TERM") or ""):lower()
 
   -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
   -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
@@ -78,7 +90,13 @@ function detect_terminal_capabilities()
   -- set (or at least its line-drawing subset) on UTF-8 locales.
   has_vt100_graphics = ((term ~= "dumb") and (term ~= "emacs") and
                           (term ~= "linux") and (term ~= "screen"))
-  
+
+  -- Autodetection is tricky, so allow user overrides.
+  has_ansi_escapes = 
+    get_boolean_env("SHELLPROMPT_ANSI_ESCAPES", has_ansi_escapes)
+  has_vt100_graphics =
+    get_boolean_env("SHELLPROMPT_VT100_GRAPHICS", has_vt100_graphics)
+
 end
 
 -- Program file handling
