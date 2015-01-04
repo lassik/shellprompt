@@ -36,6 +36,15 @@ function string_rtrim(s)
   return s
 end
 
+function string_count_matches(s, pattern)
+  local a, b, n = nil, 0, -1
+  while b do
+    n = n + 1
+    a, b = string.find(s, pattern, b+1)
+  end
+  return n
+end
+
 function string_findlast_plain(s, pattern)
   local a, b = nil, nil
   while true do
