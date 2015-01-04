@@ -129,6 +129,15 @@ function get_first_line_of_output(...)
   return output
 end
 
+-- Memoized shell commands
+
+local lastgitstatus = nil
+
+function get_git_status()
+  lastgitstatus = lastgitstatus or shellprompt_os_get_output("git", "status")
+  return lastgitstatus
+end
+
 -- Terminal capabilities
 
 function detect_terminal_capabilities()
@@ -509,9 +518,7 @@ function queries.virtualenv()
 end
 
 function queries.gitbranch()
-  return string_suffix_or_whole(
-    "/",
-    get_first_line_of_output("git", "symbolic-ref", "HEAD"))
+  return get_git_status():match("^On branch (.*?)$")
 end
 
 function queries.gitstashcount()
@@ -519,6 +526,35 @@ function queries.gitstashcount()
   local count = xs:gsub("%s+", ""):len()
   if count > 0 then return count end
   return ""
+end
+
+-- Credit to Steve Losh for inspiration on these:
+
+-- On branch master
+-- Your branch is ahead of 'origin/master' by 1 commit.
+--   (use "git push" to publish your local commits)
+--
+-- Changes to be committed:
+--   (use "git reset HEAD <file>..." to unstage)
+--
+--      modified:   shellprompt.lua
+--
+-- Changes not staged for commit:
+--   (use "git add <file>..." to update what will be committed)
+--   (use "git checkout -- <file>..." to discard changes in working directory)
+--
+--      modified:   shellprompt.lua
+
+function queries.githasstaged()
+  return not not get_git_status():find("^Changes to be committed:$")
+end
+
+function queries.githasunstaged()
+  return not not get_git_status():find("^Changes not staged for commit:$")
+end
+
+function queries.githasuntracked()
+  return not not get_git_status():find("^Untracked files:$")
 end
 
 function queries.hgbranch()
