@@ -16,6 +16,20 @@ https://en.wikipedia.org/wiki/Box-drawing_character
 
 Linux console_codes(4) manual page
 
+## Inspiration
+
+http://aperiodic.net/phil/prompt/
+
+http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/
+
+https://bbs.archlinux.org/viewtopic.php?id=84386
+
+"My Extravagant Zsh Prompt". Steve Losh. 2010-02-01.
+http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
+
+Oh My Zsh
+https://github.com/robbyrussell/oh-my-zsh
+
 ## Known problems ##
 
 ### Line-drawing characters on Linux console ##
