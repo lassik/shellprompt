@@ -2,6 +2,7 @@
 
 local buffer    = ""
 local last_ansi = nil
+local tracing   = false
 
 local has_ansi_escapes = false
 local has_utf8_encoding = false
@@ -113,7 +114,7 @@ function detect_terminal_capabilities()
   has_xterm_title = not not term:match("^xterm")
 
   -- Autodetection is tricky, so allow user overrides.
-  has_ansi_escapes = 
+  has_ansi_escapes =
     get_boolean_env("SHELLPROMPT_ANSI_ESCAPES", has_ansi_escapes)
   has_vt100_graphics =
     get_boolean_env("SHELLPROMPT_VT100_GRAPHICS", has_vt100_graphics)
@@ -281,9 +282,45 @@ function ansi_attribute_putter(ansi)
   end
 end
 
+-- Word skipping (consume word without evaluating it)
+
+function skip_text_arg(worditer)
+  local text = worditer()
+  assert(text)
+end
+
+function skipper_until(sentinel)
+  return function(worditer)
+    for word in worditer do
+      if word_definition(word) == sentinel then
+        break
+      else
+        skip_forth_word(word, worditer)
+      end
+    end
+  end
+end
+
 -- Queries
 
 local queries = {}
+local query_skippers = {}  -- NB: Indexed by name, not function object
+
+function queries.text(readarg)
+  local text = readarg()
+  assert(text)
+  return text
+end
+
+query_skippers.text = skip_text_arg
+
+function queries.reptext(readarg)
+  local text = readarg()
+  assert(text)
+  return string.rep(text, pop_number())
+end
+
+query_skippers.reptext = skip_text_arg
 
 function queries.absdir()
   return shellprompt_os_get_cur_directory()
@@ -349,9 +386,14 @@ function queries.shell()
   end
 end
 
+function queries.termcols()
+  local cols = shellprompt_os_termcolsrows()
+  return (cols or 0)  -- TODO: Is zero really a good fallback?
+end
+
 function queries.battery()
   local info = shellprompt_os_getpowerinfo()
-  return info.percent.."%"
+  return info.percent
 end
 
 function queries.virtualenv()
@@ -378,40 +420,104 @@ end
 -- Forth
 
 local dictionary = {}
+local skippers = {}
 local stack = {}
 
-function pop_number()
+function truth_value(x)
+  return not ((x == nil) or (x == false) or
+                (x == 0) or (x == "0") or (x == ""))
+end
+
+function push_value(x)
+  table.insert(stack, x)
+  return x
+end
+
+function pop_value()
   assert(#stack > 0, "Stack underflow")
+  return table.remove(stack)
+end
+
+function pop_value_of_type(goaltype)
   local value = table.remove(stack)
-  assert(type(value) == "number", "Number expected")
+  assert(type(value) == goaltype, goaltype.." expected")
   return value
 end
 
+function pop_number()
+  return pop_value_of_type("number")
+end
+
+function value_bin_op(fn)
+  return function()
+    local b, a = pop_value(), pop_value()
+    return push_value(fn(a, b))
+  end
+end
+
+function number_bin_op(fn)
+  return function()
+    local b, a = pop_number(), pop_number()
+    return push_value(fn(a, b))
+  end
+end
+
+function word_definition(word)
+  local d = dictionary[word]
+  assert(d, "undefined word: "..tostring(word))
+  return d
+end
+
+function forth_equal(a, b)
+  local na, nb = tonumber(a), tonumber(b)
+  if na and nb then
+    return na == nb
+  else
+    return a == b
+  end
+end
+
 function eval_forth_word(word, worditer)
-  -- io.stderr:write(string.format("Evaluating %q\n", word))
   assert(word)
   local numtext = string.match(word, "^[+-]?%d+$")
   if numtext then
+    if tracing then
+      io.stderr:write(string.format("Pushing %s\n", tostring(word)))
+    end
     table.insert(stack, tonumber(numtext))
     return
   end
-  local definition = dictionary[word]
-  if definition then
-    definition(worditer)
-    return
+  local d = word_definition(word)
+  assert(type(d) == "function", "word cannot be used here: "..tostring(word))
+  if tracing then
+    io.stderr:write(string.format("Evaluating %s\n", tostring(word)))
   end
-  die("undefined word: "..word)
+  d(worditer)
+end
+
+function skip_forth_word(word, worditer)
+  local skipper = skippers[word_definition(word)]
+  if skipper then
+    skipper(worditer)
+  end
 end
 
 -- Forth words
 
 for name, fn_ in pairs(queries) do
   local fn = fn_
-  dictionary[name] = function ()
-    put((fn()) or "")
+  local getter = function (readarg)
+    table.insert(stack, (fn(readarg)))
   end
-  dictionary["?"..name] = function ()
-    table.insert(stack, (fn()))
+  local putter = function (readarg)
+    put((fn(readarg)) or "")
+  end
+  dictionary["?"..name] = getter
+  dictionary[name] = putter
+  local skipper = query_skippers[name]
+  if skipper then
+    skippers[getter] = skipper
+    skippers[putter] = skipper
   end
 end
 
@@ -425,32 +531,87 @@ dictionary.red     = ansi_attribute_putter("31")
 dictionary.white   = ansi_attribute_putter("37")
 dictionary.yellow  = ansi_attribute_putter("33")
 
-function dictionary.min()
-  table.insert(stack, math.min(pop_number(), pop_number()))
+dictionary[".s"] = function()
+  io.stderr:write("[")
+  for i, val in ipairs(stack) do
+    local sep = (i > 1 and " ") or ""
+    io.stderr:write(tostring(val)..sep)
+  end
+  io.stderr:write("]\n")
 end
 
-function dictionary.max()
-  table.insert(stack, math.max(pop_number(), pop_number()))
+dictionary["then"] = "then"
+dictionary["else"] = "else"
+
+dictionary["if"] = function(worditer)
+  local flag = truth_value(pop_value())
+  for word in worditer do
+    local d = word_definition(word)
+    if d == "then" then
+      break
+    elseif d == "else" then
+      flag = not flag
+    elseif flag then
+      eval_forth_word(word, worditer)
+    else
+      skip_forth_word(word, worditer)
+    end
+  end
 end
 
-function dictionary.text(readarg)
-  local text = readarg()
-  assert(text)
-  put(text)
+skippers[dictionary["if"]] = skipper_until("then")
+
+function dictionary.invert()
+  push_value(not truth_value(pop_value()))
 end
 
-function dictionary.termcols()
-  local cols = shellprompt_os_termcolsrows()
-  table.insert(stack, (cols or 0))  -- TODO: Is zero really a good fallback?
+dictionary["and"] = value_bin_op(function(a,b) return truth_value(a) and truth_value(b) end)
+dictionary["or"]  = value_bin_op(function(a,b) return truth_value(a) or  truth_value(b) end)
+
+dictionary["="]  = value_bin_op(forth_equal)
+dictionary["<>"] = value_bin_op(function(a,b) return not forth_equal(a,b) end)
+
+dictionary["<"]  = number_bin_op(function(a,b) return a <  b end)
+dictionary["<="] = number_bin_op(function(a,b) return a <= b end)
+dictionary[">"]  = number_bin_op(function(a,b) return a >  b end)
+dictionary[">="] = number_bin_op(function(a,b) return a >= b end)
+
+dictionary["+"] = number_bin_op(function(a,b) return a + b end)
+dictionary["-"] = number_bin_op(function(a,b) return a - b end)
+dictionary["*"] = number_bin_op(function(a,b) return a * b end)
+
+-- TODO: division by zero currently pushes the value NaN or -NaN
+dictionary["/"] = number_bin_op(function(a,b) return a / b end)
+dictionary["mod"] = number_bin_op(function(a,b) return a % b end)
+
+dictionary["/mod"] = function()
+  local b, a = pop_number(), pop_number()
+  push_value(a % b)
+  push_value(a / b)
 end
 
-function dictionary.reptext(readarg)
-  local text = readarg()
-  assert(text)
-  local count = table.remove(stack)
-  assert(type(count) == "number",
-         "reptext need to pop a numerical count from the stack")
-  put(string.rep(text, count))
+dictionary["min"] = number_bin_op(math.min)
+dictionary["max"] = number_bin_op(math.max)
+
+function dictionary.drop()
+  pop_value()
+end
+
+function dictionary.dup()
+  local x = pop_value()
+  push_value(x)
+  push_value(x)
+end
+
+function dictionary.over()
+  assert(#stack >= 2, "stack underflow")
+  push_value(stack[#stack - 1])
+end
+
+function dictionary.swap()
+  local b, a = pop_value(), pop_value()
+  push_value(b)
+  push_value(a)
 end
 
 function dictionary.line()
@@ -478,26 +639,32 @@ function dictionary.nl()
   end
 end
 
+dictionary["endtitle"] = "endtitle"
+
 function dictionary.title(worditer)
-  -- TODO: This is a hack. endtitle should be a real dictionary word,
-  -- not a special-cased magic sentinel word.  It should be an error
-  -- to use ANSI colors and other formatting directives within the
-  -- title.
+  -- TODO: It should be an error to use ANSI colors and other
+  -- formatting directives within the title. Or should it really?  If
+  -- we permit ANSI colors (and treat them as no-ops) then the same
+  -- code can be re-used within titles and outside of them.
   if has_xterm_title then
     begin_zero_length_escape(']0;')
-    for word in worditer do
-      if word == 'endtitle' then break end
+  end
+  for word in worditer do
+    if word_definition(word) == "endtitle" then
+      break
+    elseif has_xterm_title then
       eval_forth_word(word, worditer)
-    end
-    putraw("\x07")
-    end_zero_length_escape()
-  else
-    for word in worditer do
-      -- TODO: This is so lame
-      if word == 'endtitle' then break end
+    else
+      skip_forth_word(word, worditer)
     end
   end
+  if has_xterm_title then
+    putraw("\x07")
+    end_zero_length_escape()
+  end
 end
+
+skippers[dictionary.title] = skipper_until("endtitle")
 
 -- Actions
 
