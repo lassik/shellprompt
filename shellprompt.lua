@@ -505,6 +505,22 @@ local actions = {}
 local actionargs = {}
 local actiondocs = {}
 
+actiondocs.activate = "activate the prompt in your shell"
+actionargs.activate = "<shell>"
+
+function actions.activate(nextarg)
+  local which_shell = nextarg()
+  if which_shell == "bash" then
+    print([[PROMPT_COMMAND='PS1="$(shellprompt encode bash || echo "$ ")"']])
+  elseif which_shell == "zsh" then
+    print([[precmd () { PROMPT="$(shellprompt encode zsh || echo "$ ")" }]])
+  elseif which_shell == "tcsh" then
+    print([[alias precmd 'set prompt = "`shellprompt encode tcsh || echo %`"']])
+  else
+    die(string.format("unknown shell: %q", which_shell))
+  end
+end
+
 actiondocs.edit = "edit the shell prompt in your text editor of choice"
 
 function actions.edit(nextarg)
