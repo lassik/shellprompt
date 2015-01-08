@@ -4,6 +4,7 @@ local buffer    = ""
 local last_ansi = nil
 
 local has_ansi_escapes = false
+local has_utf8_encoding = false
 local has_vt100_graphics = false
 local has_xterm_title = false
 
@@ -90,7 +91,9 @@ end
 
 function detect_terminal_capabilities()
 
-  local term = get_lower_env("TERM")
+  local lang     = get_lower_env("LANG")
+  local lc_ctype = get_lower_env("LC_CTYPE")
+  local term     = get_lower_env("TERM")
 
   -- TERM "dumb" is used by Emacs M-x shell-command and also M-x
   -- shell.  TERM "emacs" is sometimes used by Emacs M-x shell.  To
@@ -99,6 +102,8 @@ function detect_terminal_capabilities()
   -- themselves as TERM "dumb". So I don't know how to tell the Emacs
   -- versions that support colors from the ones that don't.
   has_ansi_escapes = ((term ~= "dumb") and (term ~= "emacs"))
+
+  has_utf8_encoding = (lc_ctype:find("utf%-8") or lang:find("utf%-8"))
 
   -- Linux console and GNU Screen lack the VT100 graphics character
   -- set (or at least its line-drawing subset) on UTF-8 locales.
@@ -112,6 +117,8 @@ function detect_terminal_capabilities()
     get_boolean_env("SHELLPROMPT_ANSI_ESCAPES", has_ansi_escapes)
   has_vt100_graphics =
     get_boolean_env("SHELLPROMPT_VT100_GRAPHICS", has_vt100_graphics)
+  has_utf8_encoding = 
+    get_boolean_env("SHELLPROMPT_UTF8_ENCODING", has_utf8_encoding)
   has_xterm_title =
     get_boolean_env("SHELLPROMPT_XTERM_TITLE", has_xterm_title)
 
@@ -448,14 +455,12 @@ end
 
 function dictionary.line()
   local length = pop_number()
-  if get_lower_env("LC_CTYPE"):find("utf%-8")
-  or get_lower_env("LANG"):find("utf%-8") then
-    -- This is the UTF-8 encoding of the Unicode character U+2500.
-    -- It seems to work in Linux console, xterm, gnome-terminal,
-    -- and PuTTY. PuTTY and old versions of xterm can't do VT100
-    -- line drawing characters, so prefer the Unicode ones where
+  if has_utf8_encoding then
+    -- This seems to work in Linux console, xterm, gnome-terminal and
+    -- PuTTY. PuTTY and old versions of xterm can't do VT100 line
+    -- drawing characters, so prefer the Unicode ones where
     -- possible. They seem to be slightly more portable.
-    put(string.rep("\xe2\x94\x80", length))
+    put(string.rep("\xe2\x94\x80", length)) -- UTF-8 encoding of U+2500
   elseif has_vt100_graphics then
     put_terminal_escape("(0")
     put(string.rep("q", length))
