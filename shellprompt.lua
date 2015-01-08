@@ -477,6 +477,14 @@ function forth_equal(a, b)
   end
 end
 
+function redefine(name, new_definition)
+  -- Yes, it's possible to shadow any built-in word.
+  if tracing and dictionary[name] then
+    io.stderr:write("Warning: redefining word "..name)
+  end
+  dictionary[name] = new_definition
+end
+
 function eval_forth_word(word, worditer)
   assert(word)
   local numtext = string.match(word, "^[+-]?%d+$")
@@ -538,6 +546,12 @@ dictionary[".s"] = function()
     io.stderr:write(tostring(val)..sep)
   end
   io.stderr:write("]\n")
+end
+
+function dictionary.constant(worditer)
+  local value = pop_value()
+  redefine(worditer(),
+           function () push_value(value) end)
 end
 
 dictionary["then"] = "then"
