@@ -292,7 +292,7 @@ end
 function skipper_until(sentinel)
   return function(worditer)
     for word in worditer do
-      if word_definition(word) == sentinel then
+      if word_has_definition(word, sentinel) then
         break
       else
         skip_forth_word(word, worditer)
@@ -466,10 +466,8 @@ function word_definition_or_nil(word)
   return dictionary[word]
 end
 
-function word_definition(word)
-  local d = word_definition_or_nil(word)
-  assert(d, "undefined word: "..tostring(word))
-  return d
+function word_has_definition(word, d)
+  return dictionary[word] == d
 end
 
 function forth_equal(a, b)
@@ -499,7 +497,8 @@ function eval_forth_word(word, worditer)
     table.insert(stack, tonumber(numtext))
     return
   end
-  local d = word_definition(word)
+  local d = word_definition_or_nil(word)
+  assert(d, "undefined word: "..tostring(word))
   assert(type(d) == "function", "word cannot be used here: "..tostring(word))
   if tracing then
     io.stderr:write(string.format("Evaluating %s\n", tostring(word)))
@@ -508,7 +507,7 @@ function eval_forth_word(word, worditer)
 end
 
 function skip_forth_word(word, worditer)
-  local skipper = skippers[word_definition(word)]
+  local skipper = skippers[word_definition_or_nil(word)]
   if skipper then
     skipper(worditer)
   end
@@ -564,10 +563,9 @@ dictionary["else"] = "else"
 dictionary["if"] = function(worditer)
   local flag = truth_value(pop_value())
   for word in worditer do
-    local d = word_definition_or_nil(word)
-    if d == "then" then
+    if word_has_definition(word, "then") then
       break
-    elseif d == "else" then
+    elseif word_has_definition(word, "else") then
       flag = not flag
     elseif flag then
       eval_forth_word(word, worditer)
@@ -668,7 +666,7 @@ function dictionary.title(worditer)
     begin_zero_length_escape(']0;')
   end
   for word in worditer do
-    if word_definition(word) == "endtitle" then
+    if word_has_definition(word, "endtitle") then
       break
     elseif has_xterm_title then
       eval_forth_word(word, worditer)
