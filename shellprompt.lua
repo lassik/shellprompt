@@ -462,8 +462,12 @@ function number_bin_op(fn)
   end
 end
 
+function word_definition_or_nil(word)
+  return dictionary[word]
+end
+
 function word_definition(word)
-  local d = dictionary[word]
+  local d = word_definition_or_nil(word)
   assert(d, "undefined word: "..tostring(word))
   return d
 end
@@ -560,7 +564,7 @@ dictionary["else"] = "else"
 dictionary["if"] = function(worditer)
   local flag = truth_value(pop_value())
   for word in worditer do
-    local d = word_definition(word)
+    local d = word_definition_or_nil(word)
     if d == "then" then
       break
     elseif d == "else" then
