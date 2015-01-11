@@ -369,7 +369,7 @@ function queries.sign()
   end
 end
 
-function queries.sp()
+function queries.space()
   return " "
 end
 
@@ -766,9 +766,9 @@ function actions.encode(nextarg)
     -- shell variables", command "prompt", says for "%{string%}":
     -- "This cannot be the last sequence in prompt."  Using %L last
     -- doesn't work either (it has no effect). We could try to be
-    -- smart and catch a trailing "sp" command or other whitespace and
-    -- put the ANSI reset before that, but there has to be a better
-    -- way...
+    -- smart and catch a trailing "space" command or other whitespace
+    -- and put the ANSI reset before that, but there has to be a
+    -- better way...
     put(" ")
   end
   io.write(buffer, "\n")
