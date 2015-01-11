@@ -268,7 +268,7 @@ function end_zero_length_escape()
   end
 end
 
-function put_terminal_escape(sequence)
+function put_zero_length_escape(sequence)
   begin_zero_length_escape(sequence)
   end_zero_length_escape()
 end
@@ -276,7 +276,7 @@ end
 function ansi_attribute_putter(ansi)
   return function()
     if has_ansi_escapes and (last_ansi ~= ansi) then
-      put_terminal_escape("["..ansi.."m")
+      put_zero_length_escape("["..ansi.."m")
       last_ansi = ansi
     end
   end
@@ -643,9 +643,9 @@ function dictionary.line()
     -- possible. They seem to be slightly more portable.
     put(string.rep("\xe2\x94\x80", length)) -- UTF-8 encoding of U+2500
   elseif has_vt100_graphics then
-    put_terminal_escape("(0")
+    put_zero_length_escape("(0")
     put(string.rep("q", length))
-    put_terminal_escape("(B")
+    put_zero_length_escape("(B")
   else
     put(string.rep("-", length))
   end
