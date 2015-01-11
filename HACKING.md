@@ -4,7 +4,8 @@
 
 <http://www.understudy.net/custom.html>
 
-<http://tldp.org/HOWTO/Xterm-Title-4.html>
+[How to change the title of an xterm](http://tldp.org/HOWTO/Xterm-Title.html).
+Ric Lister. v2.0. 1999-10-27
 
 [Box-drawing character, Wikipedia](https://en.wikipedia.org/wiki/Box-drawing_character)
 
