@@ -293,11 +293,12 @@ function skipper_until(sentinel)
   return function(worditer)
     for word in worditer do
       if word_has_definition(word, sentinel) then
-        break
+        return
       else
         skip_forth_word(word, worditer)
       end
     end
+    error("missing "..sentinel)
   end
 end
 
