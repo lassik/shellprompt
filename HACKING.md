@@ -2,27 +2,27 @@
 
 ## References ##
 
-http://www.understudy.net/custom.html
+<http://www.understudy.net/custom.html>
 
-http://tldp.org/HOWTO/Xterm-Title-4.html
+<http://tldp.org/HOWTO/Xterm-Title-4.html>
 
-https://en.wikipedia.org/wiki/Box-drawing_character
+[Box-drawing character, Wikipedia](https://en.wikipedia.org/wiki/Box-drawing_character)
 
-Linux console_codes(4) manual page
+[Linux `console_codes(4)` manual page](http://linux.die.net/man/4/console_codes)
 
 ## Inspiration
 
-http://aperiodic.net/phil/prompt/
+[Phil!'s ZSH Prompt](http://aperiodic.net/phil/prompt/). Phil! Gold.
 
-http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/
+[Bash Prompt HOWTO](http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/) Giles
+Orr. Revision: 0.93. 2003/11/06.
 
-https://bbs.archlinux.org/viewtopic.php?id=84386
+[zer0prompt - a Phil!'s ZSH Prompt alternative for BASH users](https://bbs.archlinux.org/viewtopic.php?id=84386)
 
-"My Extravagant Zsh Prompt". Steve Losh. 2010-02-01.
-http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/
+[My Extravagant Zsh Prompt](http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/). Steve
+Losh. 2010-02-01.
 
-Oh My Zsh
-https://github.com/robbyrussell/oh-my-zsh
+[Oh My Zsh](https://github.com/robbyrussell/oh-my-zsh)
 
 ## Known problems ##
 
@@ -34,7 +34,7 @@ active. The horizontal line character gets displayed as the lowercase
 letter "q" which resides at that same codepoint in the normal
 codepage.
 
-Quoting from http://bytes.com/topic/python/answers/40973-line-graphics-linux-console
+Quoting from <http://bytes.com/topic/python/answers/40973-line-graphics-linux-console>
 
 > If you call up the minicom menu, it should be surrounded by a nice
 > box made up of horizontal and vertical lines, corners, etc. It used to
