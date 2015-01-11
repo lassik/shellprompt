@@ -675,14 +675,19 @@ function dictionary.title(worditer)
   if has_xterm_title then
     begin_zero_length_escape(']0;')
   end
+  local ended = false
   for word in worditer do
     if word_has_definition(word, "endtitle") then
+      ended = true
       break
     elseif has_xterm_title then
       eval_forth_word(word, worditer)
     else
       skip_forth_word(word, worditer)
     end
+  end
+  if not ended then
+    error('title: missing endtitle')
   end
   if has_xterm_title then
     end_zero_length_escape("\x07")
