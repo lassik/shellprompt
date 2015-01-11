@@ -8,32 +8,32 @@
   
 [ANS Forth standard -- table of contents](https://www.taygeta.com/forth/dpans.htm#toc)
 
-## References ##
-
-<http://www.understudy.net/custom.html>
-
-[How to change the title of an xterm](http://tldp.org/HOWTO/Xterm-Title.html).
-Ric Lister. v2.0. 1999-10-27
+## Terminal and shell references ##
 
 [Box-drawing character, Wikipedia](https://en.wikipedia.org/wiki/Box-drawing_character)
 
 [Linux `console_codes(4)` manual page](http://linux.die.net/man/4/console_codes)
 
-## Inspiration
+[How to change the title of an xterm](http://tldp.org/HOWTO/Xterm-Title.html).
+Ric Lister. v2.0. 1999-10-27
+
+<http://www.understudy.net/custom.html>
+
+## Inspiration ##
+
+[Oh My Zsh](https://github.com/robbyrussell/oh-my-zsh)
+
+[My Extravagant Zsh Prompt](http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/). Steve
+Losh. 2010-02-01.
 
 [Phil!'s ZSH Prompt](http://aperiodic.net/phil/prompt/). Phil! Gold.
-
-[Bash Prompt HOWTO](http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/) Giles
-Orr. Revision: 0.93. 2003/11/06.
 
 [zer0prompt - a Phil!'s ZSH Prompt alternative for BASH users](https://bbs.archlinux.org/viewtopic.php?id=84386)
 
 [Bashish is a theme enviroment for text terminals](http://bashish.sourceforge.net/)
 
-[My Extravagant Zsh Prompt](http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/). Steve
-Losh. 2010-02-01.
-
-[Oh My Zsh](https://github.com/robbyrussell/oh-my-zsh)
+[Bash Prompt HOWTO](http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/) Giles
+Orr. Revision: 0.93. 2003/11/06.
 
 ## Known problems ##
 
