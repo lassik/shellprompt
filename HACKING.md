@@ -20,6 +20,8 @@ Orr. Revision: 0.93. 2003/11/06.
 
 [zer0prompt - a Phil!'s ZSH Prompt alternative for BASH users](https://bbs.archlinux.org/viewtopic.php?id=84386)
 
+[Bashish is a theme enviroment for text terminals](http://bashish.sourceforge.net/)
+
 [My Extravagant Zsh Prompt](http://stevelosh.com/blog/2010/02/my-extravagant-zsh-prompt/). Steve
 Losh. 2010-02-01.
 
