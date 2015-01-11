@@ -651,7 +651,7 @@ function dictionary.line()
   end
 end
 
-function dictionary.nl()
+function dictionary.cr()
   if is_bash or is_tcsh then
     putraw("\\n")
   else
