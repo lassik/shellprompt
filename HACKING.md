@@ -10,6 +10,10 @@
 
 ## Terminal and shell references ##
 
+[Bashish docs](http://bashish.sourceforge.net/doc.html) (Excellent reference)
+
+[Eterm Technical Reference](http://www.eterm.org/docs/view.php?doc=ref) (Ditto. Thx Bashish!)
+
 [Box-drawing character, Wikipedia](https://en.wikipedia.org/wiki/Box-drawing_character)
 
 [Linux `console_codes(4)` manual page](http://linux.die.net/man/4/console_codes)
