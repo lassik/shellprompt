@@ -34,7 +34,7 @@ Losh. 2010-02-01.
 
 [zer0prompt - a Phil!'s ZSH Prompt alternative for BASH users](https://bbs.archlinux.org/viewtopic.php?id=84386)
 
-[Bashish is a theme enviroment for text terminals](http://bashish.sourceforge.net/)
+[Bashish is a theme enviroment for text terminals](http://bashish.sourceforge.net/screenshot.html)
 
 [Bash Prompt HOWTO](http://en.tldp.org/HOWTO/Bash-Prompt-HOWTO/) Giles
 Orr. Revision: 0.93. 2003/11/06.
