@@ -373,6 +373,10 @@ function queries.space()
   return " "
 end
 
+function queries.spaces(readarg)
+  return string.rep(" ", pop_number())
+end
+
 function queries.shell()
   if is_bash then
     return "bash"
