@@ -568,7 +568,7 @@ dictionary["if"] = function(worditer)
   local flag = truth_value(pop_value())
   for word in worditer do
     if word_has_definition(word, "then") then
-      break
+      return
     elseif word_has_definition(word, "else") then
       flag = not flag
     elseif flag then
@@ -577,6 +577,7 @@ dictionary["if"] = function(worditer)
       skip_forth_word(word, worditer)
     end
   end
+  error('if: missing then')
 end
 
 skippers[dictionary["if"]] = skipper_until("then")
