@@ -251,6 +251,7 @@ function put(s)
 end
 
 function begin_zero_length_escape(sequence)
+  sequence = sequence or ""
   if is_bash then
     putraw("\\[\\e"..sequence)
   elseif is_zsh or is_tcsh then
@@ -260,11 +261,14 @@ function begin_zero_length_escape(sequence)
   end
 end
 
-function end_zero_length_escape()
+function end_zero_length_escape(sequence)
+  sequence = sequence or ""
   if is_bash then
-    putraw("\\]")
+    putraw(sequence.."\\]")
   elseif is_zsh or is_tcsh then
-    putraw("%}")
+    putraw(sequence.."%}")
+  else
+    putraw(sequence)
   end
 end
 
@@ -681,8 +685,7 @@ function dictionary.title(worditer)
     end
   end
   if has_xterm_title then
-    putraw("\x07")
-    end_zero_length_escape()
+    end_zero_length_escape("\x07")
   end
 end
 
