@@ -1,0 +1,5 @@
+language: c
+compiler:
+  - gcc
+install: sudo apt-get install lua5.2 liblua5.2-dev
+script: ./build-linux.sh && build-linux/shellprompt version
