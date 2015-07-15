@@ -4,16 +4,20 @@ compiler:
   - gcc
 addons:
   apt:
+    sources:
+      - debian-sid  # for shellcheck
     packages:
       - liblua5.2-dev
       - lua5.2
       - nodejs
+      - shellcheck
 install:
   - npm install eclint
   - git clone --depth=1 --branch=master git://github.com/davidm/lua-inspect.git
 before_script:
   - eclint check .
   - lua-inspect/luainspect -fdelimited *.lua
+  - shellcheck *.sh
 script:
   - ./build-linux.sh
 after_script:
