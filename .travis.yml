@@ -1,11 +1,18 @@
+sudo: no
 language: c
 compiler:
   - gcc
+addons:
+  apt:
+    packages:
+      - cabal-install
+      - liblua5.2-dev
+      - lua5.2
+      - nodejs
 install:
-  - sudo apt-get install lua5.2 liblua5.2-dev
-  - sudo apt-get install shellcheck
-  - sudo apt-get install npm
-  - sudo npm install -g eclint
+  - cabal update
+  - cabal install shellcheck
+  - npm install eclint
 before_script:
   - eclint .
   - shellcheck *.sh
