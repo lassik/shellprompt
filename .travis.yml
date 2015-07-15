@@ -10,7 +10,7 @@ addons:
       - nodejs
 install:
   - npm install eclint
-  - git clone https://github.com/davidm/lua-inspect.git
+  - git clone --depth=1 --branch=master git://github.com/davidm/lua-inspect.git
 before_script:
   - eclint check .
   - lua-inspect/luainspect -fdelimited *.lua
