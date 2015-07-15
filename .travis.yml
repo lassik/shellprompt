@@ -11,11 +11,15 @@ addons:
       - lua5.2
       - nodejs
 install:
+  - cabal update
   - cabal install shellcheck
   - npm install eclint
+  - git clone git@github.com:davidm/lua-inspect.git
 before_script:
   - eclint .
   - shellcheck *.sh
+  - lua-inspect/luainspect -fdelimited *.lua
 script:
   - ./build-linux.sh
+after_script:
   - build-linux/shellprompt version
