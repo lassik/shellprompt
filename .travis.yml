@@ -12,7 +12,7 @@ install:
   - npm install eclint
   - git clone https://github.com/davidm/lua-inspect.git
 before_script:
-  - eclint .
+  - eclint check .
   - lua-inspect/luainspect -fdelimited *.lua
 script:
   - ./build-linux.sh
