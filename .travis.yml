@@ -5,19 +5,14 @@ compiler:
 addons:
   apt:
     packages:
-      - cabal-install
-      - ghc
       - liblua5.2-dev
       - lua5.2
       - nodejs
 install:
-  - cabal update
-  - cabal install shellcheck
   - npm install eclint
-  - git clone git@github.com:davidm/lua-inspect.git
+  - git clone https://github.com/davidm/lua-inspect.git
 before_script:
   - eclint .
-  - shellcheck *.sh
   - lua-inspect/luainspect -fdelimited *.lua
 script:
   - ./build-linux.sh
