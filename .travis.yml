@@ -1,5 +1,10 @@
 language: c
 compiler:
   - gcc
-install: sudo apt-get install lua5.2 liblua5.2-dev shellcheck
-script: shellcheck *.sh && ./build-linux.sh && build-linux/shellprompt version
+install:
+  - sudo apt-get install lua5.2 liblua5.2-dev
+  - sudo apt-get install shellcheck
+script:
+  - shellcheck *.sh
+  - ./build-linux.sh
+  - build-linux/shellprompt version
