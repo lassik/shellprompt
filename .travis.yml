@@ -4,7 +4,11 @@ compiler:
 install:
   - sudo apt-get install lua5.2 liblua5.2-dev
   - sudo apt-get install shellcheck
-script:
+  - sudo apt-get install npm
+  - sudo npm install -g eclint
+before_script:
+  - eclint .
   - shellcheck *.sh
+script:
   - ./build-linux.sh
   - build-linux/shellprompt version
