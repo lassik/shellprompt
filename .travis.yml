@@ -6,11 +6,11 @@ addons:
   apt:
     packages:
       - cabal-install
+      - ghc
       - liblua5.2-dev
       - lua5.2
       - nodejs
 install:
-  - cabal update
   - cabal install shellcheck
   - npm install eclint
 before_script:
