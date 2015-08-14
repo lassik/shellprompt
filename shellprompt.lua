@@ -795,6 +795,14 @@ end
 dictionary["min"] = number_bin_op(math.min)
 dictionary["max"] = number_bin_op(math.max)
 
+function dictionary.tolower()
+  push_value(string.lower(pop_string()))
+end
+
+function dictionary.toupper()
+  push_value(string.upper(pop_string()))
+end
+
 function dictionary.drop()
   pop_value()
 end
