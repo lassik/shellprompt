@@ -414,6 +414,7 @@ end
 local dictionary = {}
 local variables = {}
 local stack = {}
+local defnstack = {} -- TODO: Really need to accommodate multiple entries?
 
 function printvars()
   for key, val in pairs(variables) do
@@ -647,6 +648,8 @@ dictionary[":"] = {
     local name = worditer()
     assert(name)
     local body = {}
+    local defn = function() execlist(body) end
+    table.insert(defnstack, defn)
     for word in worditer do
       if word_has_definition(word, ";") then
         break
@@ -654,12 +657,21 @@ dictionary[":"] = {
         table.insert(body, compile(word, worditer))
       end
     end
-    dictionary[name] = function() execlist(body) end
+    table.remove(defnstack)
+    dictionary[name] = defn
     return nil
   end
 }
 
 dictionary[";"] = ";"
+
+dictionary.recurse = {
+  function()
+    local defn = defnstack[#defnstack]
+    if not defn then error("recurse outside word definition") end
+    return defn
+  end
+}
 
 dictionary["'"] = {
   function(worditer)
