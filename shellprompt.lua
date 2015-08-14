@@ -678,6 +678,10 @@ end
 
 dictionary[".vs"] = printvars
 
+dictionary["."] = function()
+  print(pop_value())
+end
+
 function dictionary.invert()
   push_value(not truth_value(pop_value()))
 end
