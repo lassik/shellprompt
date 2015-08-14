@@ -635,6 +635,21 @@ dictionary[":"] = {
 
 dictionary[";"] = ";"
 
+dictionary["'"] = {
+  function(worditer)
+    local name = worditer()
+    assert(name)
+    local f = dictionary[name]
+    if not f then error("tick: undefined word: "..tostring(name)) end
+    return function() push_value(f) end
+  end
+}
+
+function dictionary.execute()
+  local fn = pop_value_of_type("function")
+  fn()
+end
+
 function dictionary.invert()
   push_value(not truth_value(pop_value()))
 end
