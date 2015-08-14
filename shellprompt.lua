@@ -892,7 +892,7 @@ function actions.edit(nextarg)
   if not editor:match("%w+") then
     editor = "vi"
   end
-  local stream, filename = open_program_for_reading()
+  local stream, filename = open_include_file(MAIN_INCLUDE_FILE, true)
   if stream then
     stream:close()
   else
@@ -905,7 +905,7 @@ actiondocs.show = "write out the program for the current prompt"
 
 function actions.show(nextarg)
   assert(not nextarg())
-  local contents = read_include_file(MAIN_INCLUDE_FILE)
+  local contents = read_include_file(MAIN_INCLUDE_FILE, true)
   if contents:len() > 0 then
     print(contents)
   end
@@ -936,7 +936,7 @@ function actions.encode(nextarg)
   local reset = compile("reset")
   execute(reset)
   include_path = get_xdg_config_homes()
-  include_file(MAIN_INCLUDE_FILE)
+  include_file(MAIN_INCLUDE_FILE, true)
   execute(reset)
   if is_tcsh then
     -- TODO: This extra space at the end of the prompt is needed so
