@@ -917,7 +917,7 @@ actiondocs.show = "write out the program for the current prompt"
 
 function actions.show(nextarg)
   assert(not nextarg())
-  local contents = read_include_file(MAIN_INCLUDE_FILE, true)
+  local contents, fullpath = read_include_file(MAIN_INCLUDE_FILE, true)
   if contents:len() > 0 then
     print(contents)
   end
