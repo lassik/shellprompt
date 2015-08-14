@@ -644,6 +644,7 @@ end
 
 dictionary["slurp-file"] = function()
   local filename = pop_string()
+  local contents = ""
   local stream = io.open(filename, "r")
   if stream then
     contents = stream:read("*a")
