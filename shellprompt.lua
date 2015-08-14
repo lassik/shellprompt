@@ -408,6 +408,10 @@ function queries.shell()
   end
 end
 
+function queries.getenv()
+  return (os.getenv(pop_string())) or ""
+end
+
 function queries.termcols()
   local cols = shellprompt_os_termcolsrows()
   return (cols or 0)  -- TODO: Is zero really a good fallback?
