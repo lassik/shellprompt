@@ -616,6 +616,25 @@ dictionary["if"] = {
   end
 }
 
+dictionary[":"] = {
+  function(worditer)
+    local name = worditer()
+    assert(name)
+    local body = {}
+    for word in worditer do
+      if word_has_definition(word, ";") then
+        break
+      else
+        table.insert(body, compile(word, worditer))
+      end
+    end
+    dictionary[name] = function() execlist(body) end
+    return nil
+  end
+}
+
+dictionary[";"] = ";"
+
 function dictionary.invert()
   push_value(not truth_value(pop_value()))
 end
