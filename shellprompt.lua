@@ -286,46 +286,29 @@ function ansi_attribute_putter(ansi)
   end
 end
 
--- Word skipping (consume word without evaluating it)
-
-function skip_text_arg(worditer)
-  local text = worditer()
-  assert(text)
-end
-
-function skipper_until(sentinel)
-  return function(worditer)
-    for word in worditer do
-      if word_has_definition(word, sentinel) then
-        return
-      else
-        skip_forth_word(word, worditer)
-      end
-    end
-    error("missing "..sentinel)
-  end
-end
-
 -- Queries
 
 local queries = {}
-local query_skippers = {}  -- NB: Indexed by name, not function object
 
-function queries.text(readarg)
-  local text = readarg()
-  assert(text)
-  return text
-end
+queries.text = {
+  function(readarg)
+    local text = readarg()
+    assert(text)
+    return function()
+      return text
+    end
+  end
+}
 
-query_skippers.text = skip_text_arg
-
-function queries.reptext(readarg)
-  local text = readarg()
-  assert(text)
-  return string.rep(text, pop_number())
-end
-
-query_skippers.reptext = skip_text_arg
+queries.reptext = {
+  function(readarg)
+    local text = readarg()
+    assert(text)
+    return function()
+      return string.rep(text, pop_number())
+    end
+  end
+}
 
 function queries.absdir()
   return shellprompt_os_get_cur_directory()
@@ -378,7 +361,7 @@ function queries.space()
   return " "
 end
 
-function queries.spaces(readarg)
+function queries.spaces()
   return string.rep(" ", pop_number())
 end
 
@@ -429,7 +412,6 @@ end
 -- Forth
 
 local dictionary = {}
-local skippers = {}
 local stack = {}
 
 function truth_value(x)
@@ -476,7 +458,52 @@ function word_definition_or_nil(word)
 end
 
 function word_has_definition(word, d)
+  -- NOTE: word need not be defined.
   return dictionary[word] == d
+end
+
+function execute(xt)
+  if xt == nil then return end
+  assert(type(xt) == "function")
+  -- TODO: If we stored the name/description of xt somewhere, we could
+  -- implement a trace feature that printed here the name/description
+  -- of the token that's about to be executed.
+  if tracing then
+    --io.stderr:write(string.format("Evaluating %s\n", tostring(word)))
+  end
+  xt()
+end
+
+function execlist(xts)
+  for _, xt in ipairs(xts) do
+    execute(xt)
+  end
+end
+
+function compile(word, worditer)
+  assert(word, "premature end of file")
+  local numtext = string.match(word, "^[+-]?%d+$")
+  if numtext then
+    local num = tonumber(numtext)
+    return function()
+      if tracing then
+        io.stderr:write(string.format("Pushing %s\n", tostring(num)))
+      end
+      push_value(num)
+    end
+  end
+  local def = dictionary[word]
+  if type(def) == "function" then -- executed
+    return def
+  elseif type(def) == "table" then -- compiled
+    assert((#def == 1) and (type(def[1]) == "function"))
+    return def[1](worditer)
+  else
+    if not d then error("undefined word: "..tostring(word)) end
+    if type(d) ~= "function" then
+      error("word cannot be used here: "..tostring(word))
+    end
+  end
 end
 
 function forth_equal(a, b)
@@ -496,49 +523,40 @@ function redefine(name, new_definition)
   dictionary[name] = new_definition
 end
 
-function eval_forth_word(word, worditer)
-  assert(word)
-  local numtext = string.match(word, "^[+-]?%d+$")
-  if numtext then
-    if tracing then
-      io.stderr:write(string.format("Pushing %s\n", tostring(word)))
-    end
-    table.insert(stack, tonumber(numtext))
-    return
-  end
-  local d = word_definition_or_nil(word)
-  assert(d, "undefined word: "..tostring(word))
-  assert(type(d) == "function", "word cannot be used here: "..tostring(word))
-  if tracing then
-    io.stderr:write(string.format("Evaluating %s\n", tostring(word)))
-  end
-  d(worditer)
-end
-
-function skip_forth_word(word, worditer)
-  local skipper = skippers[word_definition_or_nil(word)]
-  if skipper then
-    skipper(worditer)
-  end
-end
-
 -- Forth words
 
-for name, fn_ in pairs(queries) do
-  local fn = fn_
-  local getter = function (readarg)
-    table.insert(stack, (fn(readarg)))
-  end
-  local putter = function (readarg)
-    put((fn(readarg)) or "")
+for name, defn in pairs(queries) do
+  local getter, putter = nil, nil
+  if type(defn) == "table" then  -- compiled
+    local compile = defn[1]
+    getter = {
+      function(worditer)
+        local f = compile(worditer)
+        return function()
+          push_value((f()))
+        end
+      end
+    }
+    putter = {
+      function(worditer)
+        local f = compile(worditer)
+        return function()
+          put((f()) or "")
+        end
+      end
+    }
+  else
+    assert(type(defn) == "function")  -- executed
+    local f = defn
+    getter = function ()
+      push_value((f()))
+    end
+    putter = function ()
+      put((f()) or "")
+    end
   end
   dictionary["?"..name] = getter
   dictionary[name] = putter
-  local skipper = query_skippers[name]
-  if skipper then
-    skippers[getter] = skipper
-    skippers[putter] = skipper
-  end
 end
 
 dictionary.reset   = ansi_attribute_putter("0")
@@ -560,32 +578,43 @@ dictionary[".s"] = function()
   io.stderr:write("]\n")
 end
 
-function dictionary.constant(worditer)
-  local value = pop_value()
-  redefine(worditer(),
-           function () push_value(value) end)
-end
+dictionary.constant = {
+  function(worditer)
+    local name = worditer()
+    assert(name)
+    local value = pop_value()
+    redefine(name, function () push_value(value) end)
+    return nil
+  end
+}
 
 dictionary["then"] = "then"
 dictionary["else"] = "else"
 
-dictionary["if"] = function(worditer)
-  local flag = truth_value(pop_value())
-  for word in worditer do
-    if word_has_definition(word, "then") then
-      return
-    elseif word_has_definition(word, "else") then
-      flag = not flag
-    elseif flag then
-      eval_forth_word(word, worditer)
-    else
-      skip_forth_word(word, worditer)
+dictionary["if"] = {
+  function(worditer)
+    local thens, elses, inelse = {}, {}, false
+    for word in worditer do
+      if word_has_definition(word, "then") then
+        break
+      elseif word_has_definition(word, "else") then
+        assert(not inelse)
+        inelse = true
+      elseif not inelse then
+        table.insert(thens, compile(word, worditer))
+      else
+        table.insert(elses, compile(word, worditer))
+      end
+    end
+    return function()
+      if truth_value(pop_value()) then
+        execlist(thens)
+      else
+        execlist(elses)
+      end
     end
   end
-  error('if: missing then')
-end
-
-skippers[dictionary["if"]] = skipper_until("then")
+}
 
 function dictionary.invert()
   push_value(not truth_value(pop_value()))
@@ -667,34 +696,29 @@ end
 
 dictionary["endtitle"] = "endtitle"
 
-function dictionary.title(worditer)
-  -- TODO: It should be an error to use ANSI colors and other
-  -- formatting directives within the title. Or should it really?  If
-  -- we permit ANSI colors (and treat them as no-ops) then the same
-  -- code can be re-used within titles and outside of them.
-  if has_xterm_title then
-    begin_zero_length_escape(']0;')
-  end
-  local ended = false
-  for word in worditer do
-    if word_has_definition(word, "endtitle") then
-      ended = true
-      break
-    elseif has_xterm_title then
-      eval_forth_word(word, worditer)
-    else
-      skip_forth_word(word, worditer)
+-- TODO: It should be an error to use ANSI colors and other formatting
+-- directives within the title. Or should it really?  If we permit
+-- ANSI colors (and treat them as no-ops) then the same code can be
+-- re-used within titles and outside of them.
+dictionary.title = {
+  function(worditer)
+    local body = {}
+    for word in worditer do
+      if word_has_definition(word, "endtitle") then
+        break
+      else
+        table.insert(body, compile(word, worditer))
+      end
+    end
+    return function()
+      if has_xterm_title then
+        begin_zero_length_escape(']0;')
+        execlist(body)
+        end_zero_length_escape("\x07")
+      end
     end
   end
-  if not ended then
-    error('title: missing endtitle')
-  end
-  if has_xterm_title then
-    end_zero_length_escape("\x07")
-  end
-end
-
-skippers[dictionary.title] = skipper_until("endtitle")
+}
 
 -- Actions
 
@@ -768,11 +792,12 @@ function actions.encode(nextarg)
   detect_terminal_capabilities()
   local program = load_program()
   local worditer = consumer(program)
-  eval_forth_word("reset")
+  local reset = compile("reset")
+  execute(reset)
   for word in worditer do
-    eval_forth_word(word, worditer)
+    execute(compile(word, worditer))
   end
-  eval_forth_word("reset")
+  execute(reset)
   if is_tcsh then
     -- TODO: This extra space at the end of the prompt is needed so
     -- the last color from the prompt doesn't bleed over into the
