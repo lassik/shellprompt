@@ -820,9 +820,9 @@ function actions.edit(nextarg)
   os.execute(editor.." "..filename)
 end
 
-actiondocs.get = "write out the program for the current prompt"
+actiondocs.show = "write out the program for the current prompt"
 
-function actions.get(nextarg)
+function actions.show(nextarg)
   assert(not nextarg())
   local text = string_rtrim(load_program_text())
   if text:len() > 0 then
