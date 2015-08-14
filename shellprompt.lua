@@ -1,5 +1,7 @@
 -- Globals
 
+local MAIN_INCLUDE_FILE = "prompt"
+
 local buffer    = ""
 local last_ansi = nil
 local tracing   = false
@@ -142,24 +144,16 @@ function get_xdg_config_homes()
   return homes
 end
 
+local include_path = {}  -- Items are directories.
+local included_set = {}  -- Items are filenames.
+local includestack = {}  -- Items are filenames.
+
 function get_program_dirname_for_writing()
   local homes = get_xdg_config_homes()
-  -- for i, home in ipairs(homes) do print(i, home) end
   if #homes == 0 then die("Home directory not found") end
   local home = homes[1]
   shellprompt_os_ensure_dir_exists(home)
   return home
-end
-
-function open_program_for_reading()
-  for _, confdir in ipairs(get_xdg_config_homes()) do
-    local filename = confdir.."prompt"
-    local stream = io.open(filename, "r")
-    if stream ~= nil then
-      return stream, filename
-    end
-  end
-  return nil, nil
 end
 
 function save_program(argiter, filename)
@@ -221,18 +215,54 @@ function load_program_from_string(s)
   return args
 end
 
-function load_program_text()
+function sourcefilename()
+  return includestack[#includestack]
+end
+
+function is_included(filename)
+  -- TODO: take realpaths of filenames (or use unix dev/ino for checking)
+  return (included_set[filename] ~= nil)
+end
+
+function open_include_file(filename, canfail)
+  -- TODO: Allow caller to give absolute filename
+  -- TODO: Assumes all include_path entries end in dir separator.
+  for _, dir in ipairs(include_path) do
+    local fullpath = dir..filename
+    local stream = io.open(fullpath, "r")
+    if stream then return stream, fullpath end
+  end
+  if not stream and not canfail then
+    error("cannot open include file "..tostring(filename))
+  end
+  return nil, nil
+end
+
+function read_include_file(filename, canfail)
   local contents = ""
-  local stream = open_program_for_reading()
+  local stream, fullpath = open_include_file(filename, canfail)
   if stream then
     contents = stream:read("*a")
     stream:close()
   end
-  return contents
+  return contents, fullpath
 end
 
-function load_program()
-  return load_program_from_string(load_program_text())
+function include_file(filename, canfail)
+  local contents, fullpath = read_include_file(filename, canfail)
+  table.insert(included_set, fullpath)
+  table.insert(includestack, fullpath)
+  local program = load_program_from_string(contents)
+  local worditer = consumer(program)
+  for word in worditer do
+    execute(compile(word, worditer))
+  end
+  table.remove(includestack)
+end
+
+function require_file(filename)
+  if is_included(filename) then return end
+  include_file(filename)
 end
 
 -- Output
@@ -443,6 +473,10 @@ function pop_value_of_type(goaltype)
   return value
 end
 
+function pop_string()
+  return pop_value_of_type("string")
+end
+
 function pop_number()
   return pop_value_of_type("number")
 end
@@ -584,6 +618,32 @@ dictionary[".s"] = function()
     io.stderr:write(tostring(val)..sep)
   end
   io.stderr:write("]\n")
+end
+
+function dictionary.sourcefilename()
+  push_value(sourcefilename())
+end
+
+dictionary["included?"] = function()
+  push_value(is_included(pop_string()))
+end
+
+function dictionary.included()
+  include_file(pop_string())
+end
+
+function dictionary.required()
+  require_file(pop_string())
+end
+
+dictionary["slurp-file"] = function()
+  local filename = pop_string()
+  local stream = io.open(filename, "r")
+  if stream then
+    contents = stream:read("*a")
+    stream:close()
+  end
+  push_value(contents)
 end
 
 dictionary.constant = {
@@ -834,7 +894,7 @@ function actions.edit(nextarg)
   if stream then
     stream:close()
   else
-    filename = get_program_dirname_for_writing().."prompt"
+    filename = get_program_dirname_for_writing()..MAIN_INCLUDE_FILE
   end
   os.execute(editor.." "..filename)
 end
@@ -843,9 +903,9 @@ actiondocs.show = "write out the program for the current prompt"
 
 function actions.show(nextarg)
   assert(not nextarg())
-  local text = string_rtrim(load_program_text())
-  if text:len() > 0 then
-    print(text)
+  local contents = read_include_file(MAIN_INCLUDE_FILE)
+  if contents:len() > 0 then
+    print(contents)
   end
 end
 
@@ -853,7 +913,7 @@ actiondocs.set = "set the prompt to the given program"
 actionargs.set = "<program...>"
 
 function actions.set(nextarg)
-  save_program(nextarg, get_program_dirname_for_writing().."prompt")
+  save_program(nextarg, get_program_dirname_for_writing()..MAIN_INCLUDE_FILE)
 end
 
 actiondocs.encode = "encode the prompt in a format understood by the shell"
@@ -871,13 +931,10 @@ function actions.encode(nextarg)
     die(string.format("unknown shell: %q", which_shell))
   end
   detect_terminal_capabilities()
-  local program = load_program()
-  local worditer = consumer(program)
   local reset = compile("reset")
   execute(reset)
-  for word in worditer do
-    execute(compile(word, worditer))
-  end
+  include_path = get_xdg_config_homes()
+  include_file(MAIN_INCLUDE_FILE)
   execute(reset)
   if is_tcsh then
     -- TODO: This extra space at the end of the prompt is needed so
