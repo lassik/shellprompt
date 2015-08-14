@@ -412,7 +412,14 @@ end
 -- Forth
 
 local dictionary = {}
+local variables = {}
 local stack = {}
+
+function printvars()
+  for key, val in pairs(variables) do
+    print(key.." = "..tostring(val))
+  end
+end
 
 function truth_value(x)
   return not ((x == nil) or (x == false) or
@@ -588,6 +595,25 @@ dictionary.constant = {
   end
 }
 
+dictionary.variable = {
+  function(worditer)
+    local name = worditer()
+    assert(name)
+    local uniq = 0
+    local key = name
+    while variables[key] do
+      uniq = uniq + 1
+      key = name.."."..uniq
+    end
+    -- Wrap variable value in a table so it's never nil. Lua doesn't
+    -- distinguish between nil-valued table keys and nonexistent keys.
+    variables[key] = {nil}
+    dictionary[name] = function() push_value(variables[key][1]) end
+    dictionary[name.."!"] = function() variables[key][1] = pop_value() end
+    return nil
+  end
+}
+
 dictionary["then"] = "then"
 dictionary["else"] = "else"
 
@@ -649,6 +675,8 @@ function dictionary.execute()
   local fn = pop_value_of_type("function")
   fn()
 end
+
+dictionary[".vs"] = printvars
 
 function dictionary.invert()
   push_value(not truth_value(pop_value()))
