@@ -697,6 +697,9 @@ dictionary["+"] = number_bin_op(function(a,b) return a + b end)
 dictionary["-"] = number_bin_op(function(a,b) return a - b end)
 dictionary["*"] = number_bin_op(function(a,b) return a * b end)
 
+dictionary["1+"] = function() push_value(pop_number() + 1) end
+dictionary["1-"] = function() push_value(pop_number() - 1) end
+
 -- TODO: division by zero currently pushes the value NaN or -NaN
 dictionary["/"] = number_bin_op(function(a,b) return a / b end)
 dictionary["mod"] = number_bin_op(function(a,b) return a % b end)
