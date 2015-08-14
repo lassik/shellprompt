@@ -522,29 +522,31 @@ function execlist(xts)
   end
 end
 
-function compile(word, worditer)
-  assert(word, "premature end of file")
-  local numtext = string.match(word, "^[+-]?%d+$")
-  if numtext then
-    local num = tonumber(numtext)
-    return function()
-      if tracing then
-        io.stderr:write(string.format("Pushing %s\n", tostring(num)))
-      end
-      push_value(num)
+function compile_number(word)
+  if not string.match(word, "^[+-]?%d+$") then return nil end
+  local value = tonumber(word)
+  return function()
+    if tracing then
+      io.stderr:write(string.format("Pushing %s\n", tostring(value)))
     end
+    push_value(value)
   end
-  local def = dictionary[word]
-  if type(def) == "function" then -- executed
-    return def
-  elseif type(def) == "table" then -- compiled
-    assert((#def == 1) and (type(def[1]) == "function"))
-    return def[1](worditer)
+end
+
+function compile(word, worditer)
+  if not word then error("premature end of file") end
+  local defn = compile_number(word)
+  if defn then return defn end
+  defn = dictionary[word]
+  if type(defn) == "function" then -- executed
+    return defn
+  elseif type(defn) == "table" then -- compiled
+    assert((#defn == 1) and (type(defn[1]) == "function"))
+    return defn[1](worditer)
+  elseif not defn then
+    error("undefined word: "..tostring(word))
   else
-    if not d then error("undefined word: "..tostring(word)) end
-    if type(d) ~= "function" then
-      error("word cannot be used here: "..tostring(word))
-    end
+    error("word cannot be used here: "..tostring(word))
   end
 end
 
