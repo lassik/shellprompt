@@ -800,6 +800,10 @@ end
 dictionary["min"] = number_bin_op(math.min)
 dictionary["max"] = number_bin_op(math.max)
 
+function dictionary.length()
+  push_value(string.len(pop_string()))
+end
+
 function dictionary.tolower()
   push_value(string.lower(pop_string()))
 end
