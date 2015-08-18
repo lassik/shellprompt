@@ -144,7 +144,7 @@ function get_xdg_config_homes()
   return homes
 end
 
-local include_path = {}  -- Items are directories.
+local include_path = get_xdg_config_homes()
 local included_set = {}  -- Items are filenames.
 local includestack = {}  -- Items are filenames.
 
@@ -952,7 +952,6 @@ function actions.encode(nextarg)
   detect_terminal_capabilities()
   local reset = compile("reset")
   execute(reset)
-  include_path = get_xdg_config_homes()
   include_file(MAIN_INCLUDE_FILE, true)
   execute(reset)
   if is_tcsh then
