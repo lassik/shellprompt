@@ -447,12 +447,62 @@ function queries.time24()
   return os.date("%H:%M")
 end
 
-function queries.weekday()
+function queries.year()
+end
+
+function queries.month()
+end
+
+function queries.isoweeknumber()
   return os.date("%a")
 end
 
-function queries.fullweekday()
+function queries.day()
+end
+
+function queries.weekdayname()
+  return os.date("%a")
+end
+
+function queries.fullweekdayname()
   return os.date("%A")
+end
+
+function queries.isoweekday()
+  return os.date("%a")
+end
+
+function queries.dayofyear()
+  return os.date("%a")
+end
+
+function queries.hour()
+end
+
+function queries.minute()
+end
+
+function queries.second()
+end
+
+function queries.isodate()
+  return os.date("%a")
+end
+
+function queries.isodatetime()
+  return os.date("%a")
+end
+
+function queries.isodatetimesec()
+  return os.date("%a")
+end
+
+function queries.utcoffsetminutes()
+  return os.date("%a")
+end
+
+function queries.timezonename()
+  return os.date("%a")
 end
 
 function queries.user()
@@ -994,6 +1044,15 @@ end
 
 dictionary["min"] = number_bin_op(math.min)
 dictionary["max"] = number_bin_op(math.max)
+
+function dictionary.uptime()
+end
+
+function dictionary.utcnow()  
+end
+
+function dictionary.timenow()
+end
 
 dictionary["{"] = {
   function(worditer)
