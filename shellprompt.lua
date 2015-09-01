@@ -206,47 +206,79 @@ function save_program(argiter, filename)
   stream:close()
 end
 
-function load_program_from_string(s)
-  local args, i, j, k
-  i = 1
-  args = {}
-  while true do
-    j, k = string.find(s, "%s+", i)
-    if i == j and k then
-      i = k + 1
-    end
-    if i > string.len(s) then break end
-    local arg = ""
-    if string.find(s, '"', i) == i then
-      -- Double-quoted arg, backslash escapes allowed
-      i = i + 1
-      while not (string.find(s, '"', i) == i) do
-        j, k = string.find(s, "[^\\%\"]+", i)
-        if i == j and k then
-          arg = arg..string.sub(s, j, k)
-          i = k + 1
-        end
-        j, k = string.find(s, "\\[\\%\"]", i)
-        if i == j and k then
-          arg = arg..string.sub(s, k, k)
-          i = k + 1
-        end
-        if i > string.len(s) then
-          die("Missing closing quote")
-        end
-      end
-      i = i + 1
+function skip_whitespace_and_comments(s, i)
+  local a, b
+  while i <= string.len(s) do
+    a, b = string.find(s, "%s+", i)
+    if a == i then
+      i = b + 1
     else
-      -- Bare arg without quoting, backslash escapes not allowed
-      j, k = string.find(s, "[^\\%\"%s]+", i)
-      if i == j and k then
-        arg = string.sub(s, j, k)
-        i = k + 1
+      a, b = string.find(s, "\\", i, true)
+      if a == i then
+        a, b = string.find(s, "[\n\r]+", i)
+        b = b or string.len(s)
+        i = b + 1
+      else
+        break
       end
     end
-    table.insert(args, arg)
   end
-  return args
+  return i
+end
+
+function parse_bare_word(s, i)
+  local a, b
+  local tok = nil
+  a, b = string.find(s, "[^\"\\%s]+", i)
+  if a == i then
+    tok = string.sub(s, a, b)
+    i = b + 1
+  end
+  return i, tok
+end
+
+function parse_quoted_string(s, i)
+  local a, b
+  local tok = nil
+  if string.find(s, '"', i, true) == i then
+    tok = ""
+    i = i + 1
+    while not (string.find(s, '"', i, true) == i) do
+      a, b = string.find(s, "[^\t\n\r\"\\]+", i)
+      if a == i then
+        tok = tok..string.sub(s, a, b)
+        i = b + 1
+      else
+        a, b = string.find(s, "\\[^\t\n\r]", i)
+        if a == i then
+          tok = tok..string.sub(s, b, b)
+          i = b + 1
+        else
+          die("Missing closing quote or newline/tab in string")
+        end
+      end
+    end
+    i = i + 1
+  end
+  return i, tok
+end
+
+function load_program_from_string(s)
+  local tok
+  local tokens = {}
+  local i = 1
+  while i <= string.len(s) do
+    i = skip_whitespace_and_comments(s, i)
+    i, tok = parse_bare_word(s, i)
+    if not tok then
+      i, tok = parse_quoted_string(s, i)
+    end
+    if not tok then
+      break
+    end
+    table.insert(tokens, tok)
+  end
+  return tokens
 end
 
 function sourcefilename()
