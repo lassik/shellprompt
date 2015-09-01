@@ -940,6 +940,30 @@ end
 dictionary["min"] = number_bin_op(math.min)
 dictionary["max"] = number_bin_op(math.max)
 
+dictionary["{"] = {
+  function(worditer)
+    local body = {}
+    for word in worditer do
+      if word_has_definition(word, "}") then
+        break
+      else
+        table.insert(body, compile(word, worditer))
+      end
+    end
+    return function()
+      local depth = #stack
+      execlist(body)
+      local items = {}
+      for i = depth+1,#stack do
+        table.insert(items, stack[i])
+      end
+      push_value(make_list(items))
+    end
+  end
+}
+
+dictionary["}"] = "}"
+
 function dictionary.length()
   push_value(string.len(pop_string()))
 end
