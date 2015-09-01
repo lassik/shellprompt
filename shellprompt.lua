@@ -74,6 +74,23 @@ function string_findlast_plain(s, pattern)
   return a, b
 end
 
+function string:split(delim, is_plain)
+  -- Credit to Joan Ordinas, http://lua-users.org/wiki/SplitJoin
+  assert(delim ~= '')
+  local ans = {}
+  if self:len() > 0 then
+    local start = 1
+    local first, last = self:find(delim, start, is_plain)
+    while first do
+      table.insert(ans, self:sub(start, first-1))
+      start = last+1
+      first, last = self:find(delim, start, is_plain)
+    end
+    table.insert(ans, self:sub(start))
+  end
+  return ans
+end
+
 function string_suffix_or_whole(part, whole)
   local _, last = string_findlast_plain(whole, part)
   return string.sub(whole, (last or 0)+1, string.len(whole))
