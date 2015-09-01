@@ -1027,6 +1027,23 @@ function dictionary.last()
   end
 end
 
+function dictionary.sort()
+  local xt = pop_xt()
+  local coll = pop_value()
+  if not (is_list(coll) or is_set(coll)) then
+    error("sort: list or set expected")
+  end
+  coll = make_list(shallow_copy(coll))
+  function compare(a, b)
+    push_value(a)
+    push_value(b)
+    xt()
+    return truth_value(pop_value())
+  end
+  table.sort(coll, compare)
+  push_value(coll)
+end
+
 function dictionary.join()
   local delimiter = pop_string()
   push_value(table.concat(pop_list(), delimiter))
