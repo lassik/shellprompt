@@ -807,22 +807,26 @@ dictionary["if"] = {
   end
 }
 
+function compile_colon_xt(worditer)
+  local body = {}
+  local xt = function() execlist(body) end
+  table.insert(defnstack, xt)
+  for word in worditer do
+    if word_has_definition(word, ";") then
+      break
+    else
+      table.insert(body, compile(word, worditer))
+    end
+  end
+  table.remove(defnstack)
+  return xt
+end
+
 dictionary[":"] = {
   function(worditer)
     local name = worditer()
     assert(name)
-    local body = {}
-    local defn = function() execlist(body) end
-    table.insert(defnstack, defn)
-    for word in worditer do
-      if word_has_definition(word, ";") then
-        break
-      else
-        table.insert(body, compile(word, worditer))
-      end
-    end
-    table.remove(defnstack)
-    dictionary[name] = defn
+    dictionary[name] = compile_colon_xt(worditer)
     return nil
   end
 }
