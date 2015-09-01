@@ -482,6 +482,9 @@ local variables = {}
 local stack = {}
 local defnstack = {} -- TODO: Really need to accommodate multiple entries?
 
+local loopstack = {}
+local loopindex = nil
+
 function printvars()
   for key, val in pairs(variables) do
     print(key.." = "..tostring(val))
@@ -806,6 +809,35 @@ dictionary["if"] = {
     end
   end
 }
+
+dictionary["do"] = {
+  function(worditer)
+    local body = {}
+    for word in worditer do
+      if word_has_definition(word, "loop") then
+        break
+      else
+        table.insert(body, compile(word, worditer))
+      end
+    end
+    return function()
+      table.insert(loopstack, loopindex)
+      loopindex = pop_number()
+      local limit = pop_number()
+      while loopindex < limit do
+        execlist(body)
+        loopindex = loopindex + 1
+      end
+      loopindex = table.remove(loopstack)
+    end
+  end
+}
+
+dictionary["loop"] = "loop"
+
+function dictionary.i()
+  push_value(loopindex)
+end
 
 function compile_colon_xt(worditer)
   local body = {}
