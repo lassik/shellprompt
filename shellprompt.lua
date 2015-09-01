@@ -1,5 +1,7 @@
 -- Globals
 
+math.randomseed(shellprompt_os_milliseconds())
+
 local MAIN_INCLUDE_FILE = "prompt"
 
 local buffer    = ""
@@ -963,6 +965,22 @@ dictionary["{"] = {
 }
 
 dictionary["}"] = "}"
+
+function dictionary.random()
+  local spec = pop_value()
+  if is_integer(spec) then
+    push_value(math.random(0, spec-1))
+  elseif is_string(spec) then
+    assert(spec:len() > 0)
+    local idx = math.random(spec:len())
+    push_value(spec:sub(idx, idx))
+  elseif is_list(spec) or is_dict(spec) or is_set(spec) then
+    assert(#spec > 0)
+    push_value(spec[math.random(#spec)])
+  else
+    error("random: integer or collection expected")
+  end
+end
 
 function dictionary.length()
   push_value(string.len(pop_string()))
