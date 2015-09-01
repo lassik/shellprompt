@@ -1014,6 +1014,19 @@ function dictionary.length()
   end
 end
 
+function dictionary.last()
+  local coll = pop_value()
+  if is_string(coll) then
+    assert(coll:len() > 0)
+    push_value(coll:sub(coll:len(), coll:len()))
+  elseif is_list(coll) then
+    assert(#coll > 0)
+    push_value(coll[#coll])
+  else
+    error("last: list or string expected")
+  end
+end
+
 function dictionary.tolower()
   push_value(string.lower(pop_string()))
 end
