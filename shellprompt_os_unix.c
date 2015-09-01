@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/uio.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -181,4 +182,13 @@ extern int shellprompt_os_termcolsrows(lua_State *L)
         lua_pushinteger(L, ws.ws_row);
     }
     return 2;
+}
+
+extern int shellprompt_os_milliseconds(lua_State *L)
+{
+    struct timeval tv;
+
+    gettimeofday(&tv, 0);
+    lua_pushinteger(L, 1000*tv.tv_sec + tv.tv_usec/1000);
+    return 1;
 }
