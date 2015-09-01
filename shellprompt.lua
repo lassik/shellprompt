@@ -152,7 +152,7 @@ function detect_terminal_capabilities()
     get_boolean_env("SHELLPROMPT_ANSI_ESCAPES", has_ansi_escapes)
   has_vt100_graphics =
     get_boolean_env("SHELLPROMPT_VT100_GRAPHICS", has_vt100_graphics)
-  has_utf8_encoding = 
+  has_utf8_encoding =
     get_boolean_env("SHELLPROMPT_UTF8_ENCODING", has_utf8_encoding)
   has_xterm_title =
     get_boolean_env("SHELLPROMPT_XTERM_TITLE", has_xterm_title)
@@ -693,10 +693,10 @@ for name, defn in pairs(queries) do
   else
     assert(type(defn) == "function")  -- executed
     local f = defn
-    getter = function ()
+    getter = function()
       push_value((f()))
     end
-    putter = function ()
+    putter = function()
       put((f()) or "")
     end
   end
@@ -755,7 +755,7 @@ dictionary.constant = {
     local name = worditer()
     assert(name)
     local value = pop_value()
-    redefine(name, function () push_value(value) end)
+    redefine(name, function() push_value(value) end)
     return nil
   end
 }
