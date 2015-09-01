@@ -982,6 +982,27 @@ function dictionary.random()
   end
 end
 
+function dictionary.each()
+  local xt = pop_xt()
+  local coll = pop_list()
+  for _, item in ipairs(coll) do
+    push_value(item)
+    xt()
+  end
+end
+
+function dictionary.map()
+  local xt = pop_xt()
+  local coll = pop_list()
+  local results = {}
+  for _, item in ipairs(coll) do
+    push_value(item)
+    xt()
+    table.insert(results, pop_value())
+  end
+  push_value(make_list(results))
+end
+
 function dictionary.length()
   push_value(string.len(pop_string()))
 end
