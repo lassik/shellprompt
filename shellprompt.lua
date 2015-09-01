@@ -34,6 +34,21 @@ function consumer(ary)
   end
 end
 
+function shallow_copy(orig)
+  -- Based on http://lua-users.org/wiki/CopyTable
+  local copy
+  if type(orig) == 'table' then
+    copy = {}
+    setmetatable(copy, getmetatable(orig))
+    for key, value in pairs(orig) do
+      copy[key] = value
+    end
+  else
+    copy = orig
+  end
+  return copy
+end
+
 function string_rtrim(s)
   local i, n = s:reverse():find("%s*")
   if i == 1 then return s:sub(1, s:len()-n) end
