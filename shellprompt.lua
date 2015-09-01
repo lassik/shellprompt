@@ -1027,6 +1027,16 @@ function dictionary.last()
   end
 end
 
+function dictionary.join()
+  local delimiter = pop_string()
+  push_value(table.concat(pop_list(), delimiter))
+end
+
+function dictionary.split()
+  local delimiter = pop_string()
+  push_value(make_list(pop_string():split(delimiter, true)))
+end
+
 function dictionary.tolower()
   push_value(string.lower(pop_string()))
 end
