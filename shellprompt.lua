@@ -1004,7 +1004,14 @@ function dictionary.map()
 end
 
 function dictionary.length()
-  push_value(string.len(pop_string()))
+  local coll = pop_value()
+  if is_string(coll) then
+    push_value(string.len(coll))
+  elseif is_list(coll) or is_dict(coll) or is_set(coll) then
+    push_value(#coll)
+  else
+    error("length: collection expected")
+  end
 end
 
 function dictionary.tolower()
