@@ -966,6 +966,21 @@ dictionary["{"] = {
 
 dictionary["}"] = "}"
 
+function dictionary.union()
+  local a, b, c = pop_set(), pop_set(), make_set()
+  for k in pairs(a) do c[k] = true end
+  for k in pairs(b) do c[k] = true end
+  push_value(c)
+end
+
+function dictionary.intersect()
+  local a, b, c = pop_set(), pop_set(), make_set()
+  for k in pairs(a) do
+    c[k] = b[k]
+  end
+  push_value(c)
+end
+
 function dictionary.random()
   local spec = pop_value()
   if is_integer(spec) then
