@@ -472,9 +472,74 @@ function pop_value()
 end
 
 function pop_value_of_type(goaltype)
-  local value = table.remove(stack)
+  local value = pop_value()
   assert(type(value) == goaltype, goaltype.." expected")
   return value
+end
+
+function pop_value_with_metatable(desc, mt)
+  local value = pop_value()
+  assert(((type(value) == "table") and (getmetatable(value) == mt)),
+         desc.." expected")
+  return value
+end
+
+local list_mt = {}
+local dict_mt= {}
+local set_mt = {}
+
+function is_integer(obj)
+  return type(obj) == "number" and obj % 1 == 0
+end
+
+function is_string(obj)
+  return type(obj) == "string"
+end
+
+function is_list(obj)
+  return type(obj) == "table" and getmetatable(obj) == list_mt
+end
+
+function is_dict(obj)
+  return type(obj) == "table" and getmetatable(obj) == dict_mt
+end
+
+function is_set(obj)
+  return type(obj) == "table" and getmetatable(obj) == set_mt
+end
+
+function make_list(tabl)
+  tabl = tabl or {}
+  setmetatable(tabl, list_mt)
+  return tabl
+end
+
+function make_dict()
+  local obj = {}
+  setmetatable(obj, dict_mt)
+  return obj
+end
+
+function make_set()
+  local obj = {}
+  setmetatable(obj, set_mt)
+  return obj
+end
+
+function pop_xt()
+  return pop_value_of_type("function")
+end
+
+function pop_list()
+  return pop_value_with_metatable("list", list_mt)
+end
+
+function pop_dict()
+  return pop_value_with_metatable("dictionary", dict_mt)
+end
+
+function pop_set()
+  return pop_value_with_metatable("set", set_mt)
 end
 
 function pop_string()
