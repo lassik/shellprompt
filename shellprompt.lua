@@ -822,6 +822,13 @@ function compile_colon_xt(worditer)
   return xt
 end
 
+dictionary[":noname"] = {
+  function(worditer)
+    local xt = compile_colon_xt(worditer)
+    return function() push_value(xt) end
+  end
+}
+
 dictionary[":"] = {
   function(worditer)
     local name = worditer()
