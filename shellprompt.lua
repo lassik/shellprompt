@@ -387,14 +387,21 @@ function ansi_attribute_putter(ansi)
   end
 end
 
+function get_string_token(tokiter, for_whom)
+  local token = tokiter()
+  if type(token) ~= "table" or #token ~= 1 or type(token[1]) ~= "string" then
+    error(for_whom..": string expected")
+  end
+  return token[1]
+end
+
 -- Queries
 
 local queries = {}
 
 queries.text = {
-  function(readarg)
-    local text = readarg()
-    assert(text)
+  function(tokiter)
+    local text = get_string_token(tokiter, "text")
     return function()
       return text
     end
@@ -402,9 +409,8 @@ queries.text = {
 }
 
 queries.reptext = {
-  function(readarg)
-    local text = readarg()
-    assert(text)
+  function(tokiter)
+    local text = get_string_token(tokiter, "reptext")
     return function()
       return string.rep(text, pop_number())
     end
