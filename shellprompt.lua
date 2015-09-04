@@ -269,14 +269,19 @@ function load_program_from_string(s)
   local i = 1
   while i <= string.len(s) do
     i = skip_whitespace_and_comments(s, i)
-    i, tok = parse_bare_word(s, i)
-    if not tok then
-      i, tok = parse_quoted_string(s, i)
+    i, tok = parse_quoted_string(s, i)
+    if tok then
+      table.insert(tokens, {tok})
+    else
+      i, tok = parse_bare_word(s, i)
+      if tok and string.match(tok, "^[+-]?%d+$") then
+        table.insert(tokens, {tonumber(tok)})
+      elseif tok then
+        table.insert(tokens, tok)
+      else
+        break
+      end
     end
-    if not tok then
-      break
-    end
-    table.insert(tokens, tok)
   end
   return tokens
 end
@@ -660,9 +665,7 @@ function execlist(xts)
   end
 end
 
-function compile_number(word)
-  if not string.match(word, "^[+-]?%d+$") then return nil end
-  local value = tonumber(word)
+function literal_pusher(value)
   return function()
     if tracing then
       io.stderr:write(string.format("Pushing %s\n", tostring(value)))
@@ -671,20 +674,27 @@ function compile_number(word)
   end
 end
 
-function compile(word, worditer)
-  if not word then error("premature end of file") end
-  local defn = compile_number(word)
-  if defn then return defn end
-  defn = dictionary[word]
-  if type(defn) == "function" then -- executed
-    return defn
-  elseif type(defn) == "table" then -- compiled
-    assert((#defn == 1) and (type(defn[1]) == "function"))
-    return defn[1](worditer)
-  elseif not defn then
-    error("undefined word: "..tostring(word))
+function compile(token, tokiter)
+  if not token then
+    error("premature end of file")
+  elseif type(token) == "table" then -- literal
+    assert(#token == 1)
+    return literal_pusher(token[1])
   else
-    error("word cannot be used here: "..tostring(word))
+    assert(type(token) == "string") -- word
+    local defn = dictionary[token]
+    if type(defn) == "function" then -- executed
+      return defn
+    elseif type(defn) == "table" then -- compiled
+      assert(#defn == 1)
+      assert(type(defn[1]) == "function")
+      return defn[1](tokiter)
+    elseif not defn then
+      error("undefined word: "..tostring(token))
+    else
+      assert(type(defn) == "string")
+      error("word cannot be used here: "..tostring(token))
+    end
   end
 end
 
