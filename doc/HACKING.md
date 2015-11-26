@@ -18,7 +18,7 @@
 
 [Linux `console_codes(4)` manual page](http://linux.die.net/man/4/console_codes)
 
-[Xterm 256 color names](http://pln.jonas.me/xterm-colors)
+[Xterm 256 color names](http://jonasjacek.github.io/colors/)
 
 [How to change the title of an xterm](http://tldp.org/HOWTO/Xterm-Title.html).
 Ric Lister. v2.0. 1999-10-27
