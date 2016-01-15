@@ -93,13 +93,18 @@ function string:split(delim, is_plain)
   return ans
 end
 
+function string_has_prefix(whole, part)
+  return (string.find(whole, part, 1, true) == 1)
+end
+
+function string_prefix_or_whole(part, whole)
+  local first, _ = string.find(whole, part, 1, true)
+  return string.sub(whole, 1, (first or 1+string.len(whole))-1)
+end
+
 function string_suffix_or_whole(part, whole)
   local _, last = string_findlast_plain(whole, part)
   return string.sub(whole, (last or 0)+1, string.len(whole))
-end
-
-function string_has_prefix(whole, part)
-  return (string.find(whole, part, 1, true) == 1)
 end
 
 function get_lower_env(envar)
