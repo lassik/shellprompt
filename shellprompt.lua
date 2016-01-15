@@ -436,7 +436,7 @@ function queries.dir()
 end
 
 function queries.host()
-  return string_suffix_or_whole('.', shellprompt_os_get_full_hostname())
+  return string_prefix_or_whole('.', shellprompt_os_get_full_hostname())
 end
 
 function queries.time12()
