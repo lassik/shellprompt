@@ -4,6 +4,8 @@
 
 [Gforth manual](http://www.complang.tuwien.ac.at/forth/gforth/Docs-html/)
 
+[Gforth manual -- list of words](http://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Word-Index.html)
+
 [ANS Forth standard -- list of words](https://www.taygeta.com/forth/dpansf.htm)
 
 [ANS Forth standard -- table of contents](https://www.taygeta.com/forth/dpans.htm#toc)
