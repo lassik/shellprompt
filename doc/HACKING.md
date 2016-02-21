@@ -1,11 +1,11 @@
 # Hacking shellprompt #
 
 ## Forth references ##
-  
+
 [Gforth manual](http://www.complang.tuwien.ac.at/forth/gforth/Docs-html/)
-  
+
 [ANS Forth standard -- list of words](https://www.taygeta.com/forth/dpansf.htm)
-  
+
 [ANS Forth standard -- table of contents](https://www.taygeta.com/forth/dpans.htm#toc)
 
 ## Terminal and shell references ##
@@ -57,9 +57,9 @@ Quoting from <http://bytes.com/topic/python/answers/40973-line-graphics-linux-co
 > box made up of horizontal and vertical lines, corners, etc. It used to
 > work up until Redhat 7. Since upgrading to Redhat 9, and now Fedora,
 > it (and my program) has stopped working."
-> 
+>
 > I received the following reply from Thomas Dickey -
-> 
+>
 > "That's because Redhat uses UTF-8 locales, and the Linux console
 > ignores vt100 line-drawing when it is set for UTF-8. (screen also
 > does this).  ncurses checks for $TERM containing "linux" or "screen"
