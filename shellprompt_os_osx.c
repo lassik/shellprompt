@@ -130,7 +130,7 @@ static int shellprompt_os_getpowerinfo(lua_State *L)
     lua_createtable(L, 0, 0);
     lua_pushboolean(L, ischarging);
     lua_setfield(L, -2, "charging");
-    lua_pushinteger(L, charge);
+    lua_pushinteger(L, ischarging ? charge : 100);
     lua_setfield(L, -2, "percent");
     return 1;
 }
