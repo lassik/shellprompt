@@ -6,10 +6,10 @@ else
     echo "Using default build options (build-config.sh not found)"
 fi
 if test -z "$LUA_CFLAGS" ; then
-    LUA_CFLAGS="$(pkg-config --cflags lua5.2)"
+    LUA_CFLAGS="$(pkg-config --cflags lua5.4)"
 fi
 if test -z "$LUA_LDFLAGS" ; then
-    LUA_LDFLAGS="$(pkg-config --libs lua5.2)"
+    LUA_LDFLAGS="$(pkg-config --libs lua5.4)"
 fi
 if ! test -z "$LUA_PATH" ; then
     export PATH="$LUA_PATH:$PATH"

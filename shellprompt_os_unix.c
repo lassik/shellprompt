@@ -116,7 +116,7 @@ extern int shellprompt_os_get_output(lua_State *L)
 
     luaL_buffinit(L, &ans);
     argv = 0;
-    argc = lua_gettop(L);
+    argc = lua_gettop(L) - 1;
     if (argc < 1) {
         goto cleanup;
     }
