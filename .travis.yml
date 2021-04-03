@@ -5,8 +5,8 @@ compiler:
 addons:
   apt:
     packages:
-      - liblua5.2-dev
-      - lua5.2
+      - liblua5.4-dev
+      - lua5.4
       - nodejs
 install:
   - npm install eclint
