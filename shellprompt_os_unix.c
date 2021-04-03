@@ -1,7 +1,7 @@
-#include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -14,9 +14,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <lauxlib.h>
 
 #include "shellprompt_os.h"
 
@@ -39,22 +39,18 @@ extern int shellprompt_os_get_username(lua_State *L)
     struct passwd *pw;
 
     return push_string_or_blank(
-        L,
-        (pw = getpwuid(getuid())) ? pw->pw_name : 0);
+        L, (pw = getpwuid(getuid())) ? pw->pw_name : 0);
 }
 
 extern int shellprompt_os_get_full_hostname(lua_State *L)
 {
     return push_string_or_blank(
-        L,
-        (uname(&names) != -1) ? names.nodename : 0);
+        L, (uname(&names) != -1) ? names.nodename : 0);
 }
 
 extern int shellprompt_os_unamesys(lua_State *L)
 {
-    return push_string_or_blank(
-        L,
-        (uname(&names) != -1) ? names.sysname : 0);
+    return push_string_or_blank(L, (uname(&names) != -1) ? names.sysname : 0);
 }
 
 extern int shellprompt_os_get_cur_directory(lua_State *L)
@@ -109,7 +105,7 @@ extern int shellprompt_os_get_output(lua_State *L)
     pid_t child;
     size_t nremain, nfill;
     ssize_t nread;
-    int fds[2] = {-1, -1};
+    int fds[2] = { -1, -1 };
     int status;
     int argc, i;
     const char **argv;
@@ -120,11 +116,11 @@ extern int shellprompt_os_get_output(lua_State *L)
     if (argc < 1) {
         goto cleanup;
     }
-    if (!(argv = calloc(argc+1, sizeof(*argv)))) {
+    if (!(argv = calloc(argc + 1, sizeof(*argv)))) {
         goto cleanup;
     }
     for (i = 0; i < argc; i++) {
-        if (!(argv[i] = luaL_checkstring(L, i+1))) {
+        if (!(argv[i] = luaL_checkstring(L, i + 1))) {
             goto cleanup;
         }
     }
@@ -139,9 +135,9 @@ extern int shellprompt_os_get_output(lua_State *L)
 
         close(fds[0]);
         devnull = open("/dev/null", O_RDWR);
-        dup2(devnull, 0);  /* stdin */
-        dup2(fds[1],  1);  /* stdout */
-        dup2(devnull, 2);  /* stderr */
+        dup2(devnull, 0); /* stdin */
+        dup2(fds[1], 1); /* stdout */
+        dup2(devnull, 2); /* stderr */
         execvp(argv[0], (char **)argv);
         _exit(127);
     }
@@ -150,7 +146,7 @@ extern int shellprompt_os_get_output(lua_State *L)
     nremain = LUAL_BUFFERSIZE;
     nfill = 0;
     while (nremain > 0) {
-        nread = read(fds[0], buf+nfill, nremain);
+        nread = read(fds[0], buf + nfill, nremain);
         if ((nread == (ssize_t)-1) && (errno == EINTR)) {
             continue;
         }
@@ -189,6 +185,6 @@ extern int shellprompt_os_milliseconds(lua_State *L)
     struct timeval tv;
 
     gettimeofday(&tv, 0);
-    lua_pushinteger(L, 1000*tv.tv_sec + tv.tv_usec/1000);
+    lua_pushinteger(L, 1000 * tv.tv_sec + tv.tv_usec / 1000);
     return 1;
 }

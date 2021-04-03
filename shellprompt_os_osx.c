@@ -4,12 +4,14 @@
 /*
  * http://lists.omnipotent.net/pipermail/lcdproc/2006-January/010417.html
  *
- * clang -framework Foundation -framework IOKit -o battery battery.c && ./battery
+ * clang -framework Foundation -framework IOKit -o battery battery.c &&
+ * ./battery
  */
 
 /*
  * Copyright (c) 2003 Thomas Runge (coto@core.de)
- * Mach and Darwin specific code is Copyright (c) 2006 Eric Pooch (epooch@tenon.com)
+ * Mach and Darwin specific code is Copyright (c) 2006 Eric Pooch
+ * (epooch@tenon.com)
  *
  * All rights reserved.
  *
@@ -40,13 +42,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#include <sys/dkstat.h>
+#include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/sysctl.h>
-#include <sys/dkstat.h>
-#include <sys/ucred.h>
-#include <sys/mount.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/ucred.h>
 #include <sys/user.h>
 
 #include <mach/mach.h>
@@ -59,12 +61,12 @@
 #include <unistd.h>
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <IOKit/ps/IOPowerSources.h>
 #include <IOKit/ps/IOPSKeys.h>
+#include <IOKit/ps/IOPowerSources.h>
 
+#include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <lauxlib.h>
 
 #include "shellprompt_os.h"
 
@@ -82,33 +84,37 @@ static int shellprompt_os_getpowerinfo(lua_State *L)
     blob = IOPSCopyPowerSourcesInfo();
     sources = IOPSCopyPowerSourcesList(blob);
     for (i = 0; i < CFArrayGetCount(sources); i++) {
-        if (!(pSource = IOPSGetPowerSourceDescription(blob, CFArrayGetValueAtIndex(sources, i)))) {
+        if (!(pSource = IOPSGetPowerSourceDescription(
+                  blob, CFArrayGetValueAtIndex(sources, i)))) {
             continue;
         }
-        psValue = (CFStringRef)CFDictionaryGetValue(pSource, CFSTR(kIOPSNameKey));
-        if (CFDictionaryGetValueIfPresent(pSource, CFSTR(kIOPSIsPresentKey), &psValue) &&
-            (CFBooleanGetValue(psValue) > 0))
-        {
-            psValue = (CFStringRef)CFDictionaryGetValue(pSource, CFSTR(kIOPSPowerSourceStateKey));
-            if (CFStringCompare(psValue, CFSTR(kIOPSBatteryPowerValue), 0) == kCFCompareEqualTo)
-            {
+        psValue
+            = (CFStringRef)CFDictionaryGetValue(pSource, CFSTR(kIOPSNameKey));
+        if (CFDictionaryGetValueIfPresent(
+                pSource, CFSTR(kIOPSIsPresentKey), &psValue)
+            && (CFBooleanGetValue(psValue) > 0)) {
+            psValue = (CFStringRef)CFDictionaryGetValue(
+                pSource, CFSTR(kIOPSPowerSourceStateKey));
+            if (CFStringCompare(psValue, CFSTR(kIOPSBatteryPowerValue), 0)
+                == kCFCompareEqualTo) {
                 /* We are running on a battery power source. */
                 isbattery = isdischarging = 1;
-            }
-            else if (CFDictionaryGetValueIfPresent(pSource, CFSTR(kIOPSIsChargingKey), &psValue))
-            {
+            } else if (CFDictionaryGetValueIfPresent(
+                           pSource, CFSTR(kIOPSIsChargingKey), &psValue)) {
                 /* We are running on an AC power source, but we also
                  * have a battery power source present. */
                 isbattery = 1;
                 ischarging = (CFBooleanGetValue(psValue) > 0);
             }
-            if (1)  /* if (*battflag != LCDP_BATT_ABSENT) */
+            if (1) /* if (*battflag != LCDP_BATT_ABSENT) */
             {
                 int curCapacity, maxCapacity, curPercent;
                 curCapacity = maxCapacity = curPercent = 0;
-                psValue = CFDictionaryGetValue(pSource, CFSTR(kIOPSCurrentCapacityKey));
+                psValue = CFDictionaryGetValue(
+                    pSource, CFSTR(kIOPSCurrentCapacityKey));
                 CFNumberGetValue(psValue, kCFNumberSInt32Type, &curCapacity);
-                psValue = CFDictionaryGetValue(pSource, CFSTR(kIOPSMaxCapacityKey));
+                psValue = CFDictionaryGetValue(
+                    pSource, CFSTR(kIOPSMaxCapacityKey));
                 CFNumberGetValue(psValue, kCFNumberSInt32Type, &maxCapacity);
                 if ((maxCapacity > 0) && (curCapacity < maxCapacity)) {
                     curPercent = (100 * curCapacity) / maxCapacity;

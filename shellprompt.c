@@ -1,11 +1,11 @@
 #include <stdio.h>
 
+#include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
-#include <lauxlib.h>
 
-#include "shellprompt_os.h"
 #include "shellprompt_lua.h"
+#include "shellprompt_os.h"
 
 #define PROGNAME "shellprompt"
 
@@ -34,7 +34,7 @@ extern int main(int argc, char **argv)
     LUA_REGISTER(L, shellprompt_os_milliseconds);
     shellprompt_os_register(L);
 
-    lua_createtable(L, argc-1, 0);
+    lua_createtable(L, argc - 1, 0);
     for (i = 1; i < argc; i++) {
         lua_pushinteger(L, i);
         lua_pushstring(L, argv[i]);

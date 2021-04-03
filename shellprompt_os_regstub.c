@@ -2,7 +2,4 @@
 
 #include "shellprompt_os.h"
 
-extern void shellprompt_os_register(lua_State *L)
-{
-    L=L;
-}
+extern void shellprompt_os_register(lua_State *L) { L = L; }
