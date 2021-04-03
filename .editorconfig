@@ -10,6 +10,7 @@ trim_trailing_whitespace = true
 
 [*.[ch]]
 indent_size = 4
+indent_brace_style = k&r
 
 [*.lua]
 indent_size = 2
